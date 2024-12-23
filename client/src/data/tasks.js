@@ -1,0 +1,15 @@
+const tasks = [
+  { id: "1", duration: 5, text: "A", dependsOn: ["8", "10", "11"] },
+  { id: "2", duration: 4, text: "B", dependsOn: ["10", "11"] },
+  { id: "3", duration: 2, text: "C" },
+  { id: "4", duration: 3, text: "D", dependsOn: ["5", "8"] },
+  { id: "5", duration: 6, text: "E", dependsOn: ["3"] },
+  { id: "6", duration: 8, text: "F" },
+  { id: "7", duration: 3, text: "G" },
+  { id: "8", duration: 5, text: "H", dependsOn: ["3", "6", "7"] },
+  { id: "9", duration: 3, text: "I", dependsOn: ["1", "2", "4"] },
+  { id: "13", duration: 4, text: "M", dependsOn: ["9"] },
+  { id: "10", duration: 5, text: "J", dependsOn: ["3", "6"] },
+  { id: "11", duration: 2, text: "K", dependsOn: ["6", "7"] },
+  { id: "12", duration: 4, text: "L", dependsOn: ["9"] },
+];
