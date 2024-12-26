@@ -1,6 +1,6 @@
-# GanttPERT-Manager 📊
+# project-management 📊
 
-GanttPERT-Manager is a project management tool that integrates Gantt charts and PERT analysis to optimize task tracking and scheduling. It helps visualize timelines, manage dependencies, and calculate critical paths, making it ideal for project managers and teams aiming for efficient planning and execution.
+is a project management tool that integrates Gantt charts and PERT analysis to optimize task tracking and scheduling. It helps visualize timelines, manage dependencies, and calculate critical paths, making it ideal for project managers and teams aiming for efficient planning and execution.
 
 ## Features ✨
 
