@@ -1,5 +1,6 @@
 import { Task } from "@/types/tasks";
-type levelsType = { [key: number]: number[] };
+import { initLevelType, levelsType } from "@/types/Pert";
+
 const calculateLevels = (tasks: Task[]) => {
   let currentLevel = 1;
   const tmpTasks = tasks.map((e) => ({ ...e }));
@@ -55,17 +56,7 @@ const calculateStartandEnd = (
   return { tasksWithStartAndEnd, projectDuration };
 };
 
-const setTaskCritical = (task: Task) => {
-  if (task.lateStart == task.start && task.lateEnd == task.end) {
-    task.critical = true;
-    task.slackTotal = 0;
-    task.slackFree = 0;
-  } else {
-    task.critical = false;
-  }
-};
-
-const calculateLateStartAndEnd = (
+const calculateLateStartAndEndAndSlack = (
   tasks: Task[],
   levels: levelsType,
   projectDuration: number
@@ -78,6 +69,17 @@ const calculateLateStartAndEnd = (
         if (levelKeys.length == task.level) {
           task.lateEnd = projectDuration;
           task.lateStart = task.lateEnd - task.duration;
+          if (task.lateStart == task.start && task.lateEnd == task.end) {
+            task.critical = true;
+            task.slackFree = 0;
+            task.slackTotal = 0;
+          } else {
+            task.critical = false;
+            if (task.end) {
+              task.slackTotal = task.lateEnd - task.end;
+              task.slackFree = projectDuration - task.end;
+            }
+          }
         } else if (task.level !== undefined && levelKeys.length > task.level) {
           const nextLevel = levels[task.level + 1];
           const nextTasks = nextLevel
@@ -88,33 +90,65 @@ const calculateLateStartAndEnd = (
           );
           task.lateEnd = minLateStart;
           task.lateStart = task.lateEnd - task.duration;
+          if (task.lateStart == task.start && task.lateEnd == task.end) {
+            task.critical = true;
+            task.slackFree = 0;
+            task.slackTotal = 0;
+          } else {
+            task.critical = false;
+            if (task.end) {
+              const minStrart = Math.min(
+                ...nextTasks.map((el) => el?.start || 0)
+              );
+              task.slackTotal = task.lateEnd - task.end;
+              task.slackFree = minStrart - task.end;
+            }
+          }
         }
-        setTaskCritical(task);
       }
     });
   });
 };
 
-const calculatePositionOfTasks = (tasks: Task[]) => {
-  console.log(`pos of tasks `, tasks);
-  // tasks.forEach((task) => {
-  //   task.x = 0;
-  //   task.y = 0;
-  // });
+// get critical path as array of arrays like [[task1, task2], [task3, task4]] task is an object with id and taskName
+const getAllCriticalPaths = (tasks: Task[]) => {
+  const findPaths = (currentTask: Task, path: Task[]): Task[][] => {
+    const newPath = [...path, currentTask];
+    const nextTasks = tasks.filter(
+      (el) => el.dependencies?.includes(currentTask.id) && el.critical
+    );
+
+    if (nextTasks.length === 0) {
+      return [newPath];
+    }
+
+    return nextTasks.flatMap((nextTask) => findPaths(nextTask, newPath));
+  };
+
+  const startTasks = tasks.filter((el) => el.lateStart == 0);
+  const allPaths = startTasks.flatMap((startTask) => findPaths(startTask, []));
+
+  return allPaths;
 };
-const calculatePert = (tasks: Task[]) => {
-  const result = calculateLevels(tasks);
+
+const getLevels = (initLevels: initLevelType) => {
   const levels = {} as levelsType;
-  result.forEach((el) => {
+  initLevels.forEach((el) => {
     if (levels[el.level]) {
       levels[el.level].push(el.id);
     } else {
       levels[el.level] = [el.id];
     }
   });
+  return levels;
+};
+
+const calculatePert = (tasks: Task[]) => {
+  const initLevels = calculateLevels(tasks);
+  const levels = getLevels(initLevels);
 
   const tasksWithLevel = tasks.map((task) => {
-    const level = result.find((el) => el.id == task.id);
+    const level = initLevels.find((el) => el.id == task.id);
     return {
       ...task,
       level: level?.level,
@@ -125,13 +159,16 @@ const calculatePert = (tasks: Task[]) => {
     tasksWithLevel,
     levels
   );
-  // console.log(tasksWithStartAndEnd, projectDuration);
-  calculateLateStartAndEnd(tasksWithStartAndEnd, levels, projectDuration);
-  calculatePositionOfTasks(tasksWithStartAndEnd);
-  console.log(tasksWithLevel);
+  calculateLateStartAndEndAndSlack(
+    tasksWithStartAndEnd,
+    levels,
+    projectDuration
+  );
   return {
     tasks: tasksWithStartAndEnd,
     levels,
+    criticalPaths: getAllCriticalPaths(tasksWithStartAndEnd),
+    projectDuration,
   };
 };
 
