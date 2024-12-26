@@ -1,19 +1,20 @@
-import { Dependency } from "./dependency";
-
 export type Task = {
   id: number;
   taskName: string;
-  description: string;
+  description?: string;
   duration: number;
   createdAt?: string;
   updatedAt?: string;
-  projectId: number;
-  dependencies?: Dependency[];
+  projectId?: number;
+  dependencies?: number[];
   level?: number;
   start?: number;
   end?: number;
   lateStart?: number;
   lateEnd?: number;
   slackTotal?: number;
+  slackFree?: number;
   critical?: boolean;
+  x?: number;
+  y?: number;
 };

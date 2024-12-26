@@ -119,6 +119,9 @@ const getProjectDetails = async (req, res) => {
 
     const tasks = await Task.findAll({
       where: { projectId },
+      attributes: {
+        exclude: ["createdAt", "updatedAt", "description", "projectId"],
+      },
     });
 
     const tasksWithDependencies = await Promise.all(
@@ -130,23 +133,25 @@ const getProjectDetails = async (req, res) => {
           },
         });
 
-        const detailedDependencies = await Promise.all(
-          dependencies.map(async (dependency) => {
-            const dependentTask = await Task.findOne({
-              where: { id: dependency.dep_taskId },
-              attributes: ["taskName"],
-            });
+        // const detailedDependencies = await Promise.all(
+        //   dependencies.map(async (dependency) => {
+        //     // const dependentTask = await Task.findOne({
+        //     //   where: { id: dependency.dep_taskId },
+        //     //   attributes: ["taskName"],
+        //     // });
 
-            return {
-              ...dependency.toJSON(),
-              dep_taskName: dependentTask ? dependentTask.taskName : null,
-            };
-          })
-        );
+        //     // return {
+        //     //   ...dependency.toJSON(),
+        //     //   dep_taskName: dependentTask ? dependentTask.taskName : null,
+        //     // };
+        //     return dependency.dep_taskId;
+        //   })
+        // );
 
         return {
           ...task.toJSON(),
-          dependencies: detailedDependencies,
+          // dependencies: detailedDependencies,
+          dependencies: dependencies.map((dependency) => dependency.dep_taskId),
         };
       })
     );
