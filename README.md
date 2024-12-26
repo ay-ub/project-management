@@ -11,10 +11,10 @@ GanttPERT-Manager is a project management tool that integrates Gantt charts and 
 
 ## Installation ⚙️
 
-To get started with GanttPERT-Manager, clone the repository:
+To get started with Project-management, clone the repository:
 
 ```bash
-git clone https://github.com/ay-ub/GanttPERT-Manager.git
+git clone https://github.com/ay-ub/project-management.git
 cd GanttPERT-Manager
 ```
 
@@ -59,5 +59,5 @@ npm start
 From the client directory, run the server:
 
 ```bash
-npm start
+npm run dev
 ```
