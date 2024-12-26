@@ -1,4 +1,5 @@
 import Notify from "@/lib/Notify";
+import { PertData } from "@/types/Pert";
 import { project } from "@/types/project";
 import { create } from "zustand";
 export type ProjectState = {
@@ -6,6 +7,7 @@ export type ProjectState = {
   currentProject: project;
   loading: boolean;
   projectsLoading: boolean;
+  pertData: PertData;
   featchProjects: (email: string) => Promise<void>;
   featchProjectDetails: (projectId: number) => Promise<void>;
   fetchDeletProject: (projectId: number) => Promise<void>;
@@ -14,12 +16,14 @@ export type ProjectState = {
     projectName: string;
     projectDescription: string;
   }) => Promise<void>;
+  setPertData: (data: PertData) => void;
 };
 const useProject = create<ProjectState>((set) => ({
   projects: [],
   currentProject: {} as project,
   loading: false,
   projectsLoading: false,
+  pertData: {} as PertData,
   featchProjects: async (email) => {
     try {
       set({
@@ -116,6 +120,11 @@ const useProject = create<ProjectState>((set) => ({
     } catch (error) {
       console.log(error);
     }
+  },
+  setPertData: (data) => {
+    set({
+      pertData: data,
+    });
   },
 }));
 
