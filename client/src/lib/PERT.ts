@@ -2,7 +2,7 @@ import { Task } from "@/types/tasks";
 import { initLevelType, levelsType } from "@/types/Pert";
 
 const calculateLevels = (tasks: Task[]) => {
-  let currentLevel = 1;
+  let currentLevel = 2;
   const tmpTasks = tasks.map((e) => ({ ...e }));
   const levels = [] as { id: number; taskName: string; level: number }[];
   for (let index = 0; index < tmpTasks.length; index++) {
@@ -143,6 +143,20 @@ const getLevels = (initLevels: initLevelType) => {
   return levels;
 };
 
+const getLinks = (tasks: Task[]) => {
+  const links = [] as { from: number; to: number }[];
+  tasks.forEach((task) => {
+    task.dependencies?.forEach((dep) => {
+      links.push({
+        from: task.id,
+        to: dep,
+      });
+    });
+  });
+
+  return links;
+};
+
 const calculatePert = (tasks: Task[]) => {
   const initLevels = calculateLevels(tasks);
   const levels = getLevels(initLevels);
@@ -164,11 +178,15 @@ const calculatePert = (tasks: Task[]) => {
     levels,
     projectDuration
   );
+  const criticalPaths = getAllCriticalPaths(tasksWithStartAndEnd);
+  const links = getLinks(tasksWithStartAndEnd);
+
   return {
     tasks: tasksWithStartAndEnd,
     levels,
-    criticalPaths: getAllCriticalPaths(tasksWithStartAndEnd),
+    criticalPaths,
     projectDuration,
+    links,
   };
 };
 
