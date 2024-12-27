@@ -112,8 +112,8 @@ const calculateLateStartAndEndAndSlack = (
 
 // get critical path as array of arrays like [[task1, task2], [task3, task4]] task is an object with id and taskName
 const getAllCriticalPaths = (tasks: Task[]) => {
-  const findPaths = (currentTask: Task, path: Task[]): Task[][] => {
-    const newPath = [...path, currentTask];
+  const findPaths = (currentTask: Task, path: string[]): string[][] => {
+    const newPath = [...path, currentTask.taskName];
     const nextTasks = tasks.filter(
       (el) => el.dependencies?.includes(currentTask.id) && el.critical
     );
