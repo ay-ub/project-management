@@ -16,7 +16,7 @@ function Project() {
     }
   }, [projectId]);
   return currentProject.projectName ? (
-    <Tabs defaultValue="PERT" className="w-full">
+    <Tabs defaultValue="PERT" className="w-full relative">
       <TabsList className="w-full py-2">
         <TabsTrigger value="PERT" className="flex-1 ">
           PERT
@@ -39,7 +39,9 @@ function Project() {
             <Loader className="animate-spin" />{" "}
           </CenterTabContent>
         ) : (
-          <Gantt />
+          <div className="w-full  absolute  h-[calc(100vh-133px)] overflow-y-auto">
+            <Gantt />
+          </div>
         )}
       </TabsContent>
       <TabsContent value="SLACK">
@@ -64,7 +66,7 @@ function Project() {
 }
 
 const CenterTabContent = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-full flex justify-center items-center h-[calc(100vh-133px)]">
+  <div className="w-full flex justify-center items-center h-[calc(100vh-133px)] absolute">
     {children}
   </div>
 );

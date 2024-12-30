@@ -8,6 +8,7 @@ export type PertData = {
   levels: levelsType;
   criticalPaths: string[][];
   projectDuration: number;
-  nbrOfLevels: number;
-  maxLengthOfLevel: number;
+  // nbrOfLevels: number;
+  // maxLengthOfLevel: number;
+  links: { from: number; to: number }[];
 };
