@@ -1,37 +1,44 @@
 import { Task } from "@/types/tasks";
 import { useTheme } from "./theme-provider";
 
-const TaskCircle = ({
-  cx = 40,
-  cy = 80,
-  radius = 40,
-  task,
-}: {
-  cx: number;
-  cy: number;
-  radius?: number;
-  task?: Task;
-}) => {
+const TaskCircle = ({ radius = 40, task }: { radius?: number; task: Task }) => {
   const { theme } = useTheme();
 
-  const lineColor = theme === "dark" ? "white" : "black";
+  const STROKE = theme === "dark" ? "white" : "black";
+  const bgColor = theme === "dark" ? "black" : "white";
+  const criticalColor = theme === "dark" ? "#333" : "#eee";
   const fontSize = radius / 5;
+  const cx = task?.x || 40;
+  const cy = task?.y || 80;
   return (
     <>
       <circle
         cx={cx}
         cy={cy}
         r={radius}
-        stroke={lineColor}
+        stroke={task?.critical ? "red" : STROKE}
+        className={task?.critical ? "stroke-primary" : STROKE}
         strokeWidth="1"
-        fill="none"
+        fill={task?.critical ? criticalColor : bgColor}
       />
+      {/* <rect
+        x={cx - radius}
+        y={cy - radius}
+        width={radius * 2}
+        height={radius * 2}
+        className={task?.critical ? "stroke-primary" : STROKE}
+        fill={task?.critical ? criticalColor : bgColor}
+        stroke={STROKE}
+        strokeWidth="1"
+        rx={"10"}
+        ry={"10"}
+      /> */}
       <line
         x1={cx - Math.sqrt(radius ** 2 - (radius / 3) ** 2)}
         y1={cy - radius / 3}
         x2={cx + Math.sqrt(radius ** 2 - (radius / 3) ** 2)}
         y2={cy - radius / 3}
-        stroke={lineColor}
+        stroke={STROKE}
         strokeWidth="1"
       />
 
@@ -40,7 +47,7 @@ const TaskCircle = ({
         y1={cy + radius / 3}
         x2={cx + Math.sqrt(radius ** 2 - (radius / 3) ** 2)}
         y2={cy + radius / 3}
-        stroke={lineColor}
+        stroke={STROKE}
         strokeWidth="1"
       />
 
@@ -49,7 +56,7 @@ const TaskCircle = ({
         y1={cy - radius / 3}
         x2={cx}
         y2={cy + radius}
-        stroke={lineColor}
+        stroke={STROKE}
         strokeWidth="1"
       />
 
@@ -59,9 +66,9 @@ const TaskCircle = ({
         textAnchor="middle"
         alignmentBaseline="middle"
         fontSize={fontSize}
-        fill={lineColor}
+        fill={STROKE}
       >
-        {task?.taskName || "Task"}
+        {task?.taskName}
       </text>
 
       <text
@@ -70,9 +77,9 @@ const TaskCircle = ({
         textAnchor="middle"
         alignmentBaseline="middle"
         fontSize={fontSize}
-        fill={lineColor}
+        fill={STROKE}
       >
-        3
+        {task?.start}
       </text>
 
       <text
@@ -81,9 +88,9 @@ const TaskCircle = ({
         textAnchor="middle"
         alignmentBaseline="middle"
         fontSize={fontSize}
-        fill={lineColor}
+        fill={STROKE}
       >
-        7
+        {task?.end}
       </text>
 
       <text
@@ -92,9 +99,9 @@ const TaskCircle = ({
         textAnchor="middle"
         alignmentBaseline="middle"
         fontSize={fontSize}
-        fill={lineColor}
+        fill={STROKE}
       >
-        10
+        {task?.lateStart}
       </text>
 
       <text
@@ -103,9 +110,9 @@ const TaskCircle = ({
         textAnchor="middle"
         alignmentBaseline="middle"
         fontSize={fontSize}
-        fill={lineColor}
+        fill={STROKE}
       >
-        14
+        {task?.lateEnd}
       </text>
     </>
   );
