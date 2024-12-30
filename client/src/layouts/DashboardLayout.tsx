@@ -11,7 +11,7 @@ import ModeToggle from "@/components/mode-toggle";
 import useProject from "@/store/projectStore";
 import Tasks from "@/components/Tasks";
 export default function DashboardLayout() {
-  const { currentProject } = useProject();
+  const { currentProject, pertData } = useProject();
   const { projectId } = useParams();
   return (
     <SidebarProvider>
@@ -21,11 +21,11 @@ export default function DashboardLayout() {
           <div className="flex flex-1 items-center gap-2 px-3">
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            {projectId ? (
+            {projectId && pertData ? (
               <div className="flex items-center gap-2">
                 <span>{currentProject.projectName}</span>
                 <Separator orientation="vertical" className="mr-2 h-4" />
-                <span>{currentProject?.duration || "22 Days"}</span>
+                <span>{pertData.projectDuration} days</span>
               </div>
             ) : (
               <span>Projects</span>
@@ -33,7 +33,13 @@ export default function DashboardLayout() {
           </div>
           <div className="ml-auto px-3 flex items-center gap-3">
             <ModeToggle />
-            <Tasks />
+            <div
+              className={`${
+                projectId ? "w-fit" : "w-0 overflow-hidden"
+              } duration-300`}
+            >
+              <Tasks />
+            </div>
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4  p-4">
