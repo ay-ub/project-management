@@ -1,12 +1,12 @@
 export type Task = {
-  id: number;
+  id: number | string;
   taskName: string;
   description?: string;
   duration: number;
   createdAt?: string;
   updatedAt?: string;
   projectId?: number;
-  dependencies?: number[];
+  dependencies?: number[] | string[];
   level?: number;
   start?: number;
   end?: number;
