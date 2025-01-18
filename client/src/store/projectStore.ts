@@ -1,13 +1,12 @@
 import Notify from "@/lib/Notify";
-import { PertData } from "@/types/Pert";
 import { project } from "@/types/project";
 import { create } from "zustand";
+import usePert from "./pertStore";
 export type ProjectState = {
   projects: project[];
   currentProject: project;
   loading: boolean;
   projectsLoading: boolean;
-  pertData: PertData;
   featchProjects: (email: string) => Promise<void>;
   featchProjectDetails: (projectId: number) => Promise<void>;
   fetchDeletProject: (projectId: number) => Promise<void>;
@@ -16,14 +15,12 @@ export type ProjectState = {
     projectName: string;
     projectDescription: string;
   }) => Promise<void>;
-  setPertData: (data: PertData) => void;
 };
 const useProject = create<ProjectState>((set) => ({
   projects: [],
   currentProject: {} as project,
   loading: false,
   projectsLoading: false,
-  pertData: {} as PertData,
   featchProjects: async (email) => {
     try {
       set({
@@ -53,10 +50,19 @@ const useProject = create<ProjectState>((set) => ({
       const res = await fetch(`/api/project/${projectId}`);
 
       const currentProjectData = await res.json();
-      if (currentProjectData?.status == "success") {
+      console.log(currentProjectData);
+      if (
+        currentProjectData?.status == "success" &&
+        currentProjectData.data.tasks.length > 0
+      ) {
         set({
           currentProject: currentProjectData.data,
         });
+      } else {
+        set({
+          currentProject: {} as project,
+        });
+        // Notify("project not found!", "error");
       }
     } catch (error) {
       console.log(error);
@@ -120,11 +126,6 @@ const useProject = create<ProjectState>((set) => ({
     } catch (error) {
       console.log(error);
     }
-  },
-  setPertData: (data) => {
-    set({
-      pertData: data,
-    });
   },
 }));
 

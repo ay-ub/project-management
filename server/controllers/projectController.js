@@ -160,6 +160,33 @@ const getProjectDetails = async (req, res) => {
       status: "success",
       data: { ...projectDetails.dataValues, tasks: tasksWithDependencies },
     });
+    // res.status(200).json({
+    //   status: "success",
+    //   data: {
+    //     id: 39,
+    //     projectName: "Project Apollo",
+    //     projectDescription:
+    //       "A groundbreaking platform to streamline space research data collection and analysis.",
+    //     createdAt: "2024-12-22T19:51:48.957Z",
+    //     updatedAt: "2024-12-22T19:51:48.957Z",
+    //     userId: "johndoe@example.com",
+    //     tasks: [
+    //       { id: 1, duration: 5, taskName: "A", dependencies: [8, 10, 11] },
+    //       { id: 2, duration: 4, taskName: "B", dependencies: [10, 11] },
+    //       { id: 3, duration: 2, taskName: "C", dependencies: [] },
+    //       { id: 4, duration: 3, taskName: "D", dependencies: [5, 8] },
+    //       { id: 5, duration: 6, taskName: "E", dependencies: [3] },
+    //       { id: 6, duration: 8, taskName: "F", dependencies: [] },
+    //       { id: 7, duration: 3, taskName: "G", dependencies: [] },
+    //       { id: 8, duration: 5, taskName: "H", dependencies: [3, 6, 7] },
+    //       { id: 9, duration: 3, taskName: "I", dependencies: [1, 2, 4] },
+    //       { id: 10, duration: 5, taskName: "J", dependencies: [3, 6] },
+    //       { id: 11, duration: 2, taskName: "K", dependencies: [6, 7] },
+    //       { id: 12, duration: 4, taskName: "L", dependencies: [9] },
+    //       { id: 13, duration: 4, taskName: "M", dependencies: [9] },
+    //     ],
+    //   },
+    // });
   } catch (error) {
     res.status(400).json({ status: "error", message: error.message });
   }
