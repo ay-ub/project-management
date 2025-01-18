@@ -58,6 +58,7 @@ const useProject = create<ProjectState>((set) => ({
         set({
           currentProject: currentProjectData.data,
         });
+        usePert.getState().Pert(currentProjectData.data.tasks);
       } else {
         set({
           currentProject: {} as project,
