@@ -9,18 +9,18 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "./ui/badge";
 import getAllCriticalPaths from "@/utils/getCriticalPaths";
-import usePert from "@/store/pertStore";
+import useProject from "@/store/projectStore";
 
 function Slack() {
-  const pertData = usePert((state) => state.pertData);
-  if (!pertData.tasks) {
+  const tasks = useProject.getState().pertData.tasks;
+  if (!tasks) {
     return (
-      <div>
-        <h1>data Not Found...</h1>
+      <div className="w-full h-full flex justify-center items-center">
+        No tasks
       </div>
     );
   }
-  const tasksWithoutStartandEnd = pertData.tasks.filter(
+  const tasksWithoutStartandEnd = tasks.filter(
     (task) => task.taskName != "START" && task.taskName != "END"
   );
   const criticalPaths = getAllCriticalPaths(tasksWithoutStartandEnd);

@@ -1,20 +1,65 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "./theme-provider";
 import TaskCircle from "./TaskCircle";
 import TaskLink from "./TaskLink";
-import usePert from "@/store/pertStore";
+import { PertData } from "@/types/Pert";
+import useProject from "@/store/projectStore";
+import calculatePert from "@/utils/PERT";
 
 function Pert() {
   const { theme } = useTheme();
-  const [selectedTask, setSelectedTask] = useState<number | undefined>(
-    undefined
-  );
+  const [selectedTask, setSelectedTask] = useState<
+    | {
+        currentTaskID: number;
+        dependencies: number[];
+      }
+    | undefined
+  >(undefined);
+  const [pertData, setPertData] = useState<PertData>({
+    tasks: [],
+    levels: [],
+    projectDuration: 0,
+    links: [],
+    width: 0,
+    height: 0,
+  });
   const STROKE = theme === "dark" ? "#ccc" : "#333";
+  const initTasks = useProject.getState().currentProject.tasks;
+  useEffect(() => {
+    if (initTasks && initTasks.length > 0 && pertData.tasks.length === 0) {
+      const tasks = initTasks.map((task) => {
+        return {
+          ...task,
+        };
+      });
+      try {
+        const result = calculatePert(tasks);
+        if (!result) return;
+        setPertData(result);
+        console.log({
+          result,
+          tasks,
+          initTasks,
+          pertData,
+        });
+        useProject.setState({
+          pertData: result,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [initTasks]);
 
-  const pertData = usePert((state) => state.pertData);
+  useEffect(() => {
+    const pertData = useProject.getState().pertData;
+    if (pertData && pertData?.tasks?.length > 0) {
+      setPertData(pertData);
+    }
+  }, []);
   return (
-    pertData && (
+    (pertData.tasks.length > 0 && (
       <div className="w-full relative h-[calc(100vh-133px)] overflow-auto svg-container">
         <svg
           className={` w-[${pertData.width}px] h-[${pertData.height}px] absolute `}
@@ -56,7 +101,7 @@ function Pert() {
                 STROKE={STROKE}
                 fromTask={fromTask}
                 toTask={toTask}
-                radius={pertData.radius}
+                radius={50}
                 selectedTask={selectedTask}
               />
             ) : null;
@@ -65,12 +110,16 @@ function Pert() {
             <TaskCircle
               key={task.id}
               task={task}
-              radius={pertData.radius}
+              radius={50}
               selectedTask={selectedTask}
               setSelectedTask={setSelectedTask}
             />
           ))}
         </svg>
+      </div>
+    )) || (
+      <div className="w-full h-full flex justify-center items-center">
+        No tasks
       </div>
     )
   );

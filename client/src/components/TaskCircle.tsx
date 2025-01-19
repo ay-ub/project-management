@@ -26,19 +26,34 @@ const TaskCircle = React.memo(
   }: {
     radius?: number;
     task: Task;
-    setSelectedTask: (id: number | undefined) => void;
-    selectedTask: number | undefined;
+    setSelectedTask: (
+      task:
+        | {
+            currentTaskID: number;
+            dependencies: number[];
+          }
+        | undefined
+    ) => void;
+    selectedTask:
+      | {
+          currentTaskID: number;
+          dependencies: number[];
+        }
+      | undefined;
   }) => {
     const { theme } = useTheme();
 
     const STROKE = theme === "dark" ? "white" : "black";
-    const bgColor = theme === "dark" ? "black" : "white";
+    const bgColor = theme === "dark" ? "black" : "#FBF5DD";
     const criticalColor = "#f97316";
     const fontSize = radius / 5;
     const cx = task?.x || 40;
     const cy = task?.y || 80;
     const handleMouseEnter = () => {
-      setSelectedTask(task.id);
+      setSelectedTask({
+        currentTaskID: task.id,
+        dependencies: task.dependencies || [],
+      });
     };
     const handleMouseLeave = () => {
       setSelectedTask(undefined);
@@ -47,15 +62,16 @@ const TaskCircle = React.memo(
       <svg
         className={`${
           selectedTask != undefined
-            ? task.id != selectedTask &&
-              !task.dependencies?.includes(selectedTask) &&
+            ? !selectedTask.dependencies.includes(task.id) &&
+              !task.dependencies?.includes(selectedTask.currentTaskID) &&
+              selectedTask.currentTaskID != task.id &&
               "blur-sm"
             : null
         }  duration-300`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <motion.circle
+        {/* <motion.circle
           initial="hidden"
           animate="visible"
           variants={draw}
@@ -68,8 +84,11 @@ const TaskCircle = React.memo(
           } task-circle `}
           strokeWidth="2"
           fill={task?.critical ? criticalColor : bgColor}
-        />
-        {/* <rect
+        /> */}
+        <motion.rect
+          initial="hidden"
+          animate="visible"
+          variants={draw}
           x={cx - radius}
           y={cy - radius}
           width={radius * 2}
@@ -80,7 +99,7 @@ const TaskCircle = React.memo(
           strokeWidth="1"
           rx={"10"}
           ry={"10"}
-        /> */}
+        />
         <line
           x1={cx - Math.sqrt(radius ** 2 - (radius / 3) ** 2)}
           y1={cy - radius / 3}

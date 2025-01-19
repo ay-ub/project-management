@@ -1,12 +1,13 @@
 import Notify from "@/lib/Notify";
+import { PertData } from "@/types/Pert";
 import { project } from "@/types/project";
 import { create } from "zustand";
-import usePert from "./pertStore";
 export type ProjectState = {
   projects: project[];
   currentProject: project;
   loading: boolean;
   projectsLoading: boolean;
+  pertData: PertData;
   featchProjects: (email: string) => Promise<void>;
   featchProjectDetails: (projectId: number) => Promise<void>;
   fetchDeletProject: (projectId: number) => Promise<void>;
@@ -15,12 +16,21 @@ export type ProjectState = {
     projectName: string;
     projectDescription: string;
   }) => Promise<void>;
+  fetchUpdateProject: (
+    projectData: {
+      userId: string;
+      projectName: string;
+      projectDescription: string;
+    },
+    projectId: number
+  ) => Promise<void>;
 };
 const useProject = create<ProjectState>((set) => ({
   projects: [],
   currentProject: {} as project,
   loading: false,
   projectsLoading: false,
+  pertData: {} as PertData,
   featchProjects: async (email) => {
     try {
       set({
@@ -58,12 +68,19 @@ const useProject = create<ProjectState>((set) => ({
         set({
           currentProject: currentProjectData.data,
         });
-        usePert.getState().Pert(currentProjectData.data.tasks);
+      } else if (
+        currentProjectData?.status == "success" &&
+        currentProjectData.data?.tasks?.length == 0
+      ) {
+        set({
+          currentProject: currentProjectData.data,
+          pertData: {} as PertData,
+        });
       } else {
         set({
           currentProject: {} as project,
+          pertData: {} as PertData,
         });
-        // Notify("project not found!", "error");
       }
     } catch (error) {
       console.log(error);
@@ -120,6 +137,45 @@ const useProject = create<ProjectState>((set) => ({
         Notify(resData.message, "success");
         set((state) => ({
           projects: [...state.projects, resData.data],
+        }));
+      } else {
+        Notify(resData.message, "error");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  fetchUpdateProject: async (projectData, projectId) => {
+    if (
+      !projectData.userId ||
+      !projectData.projectName ||
+      !projectData.projectDescription ||
+      !projectId
+    ) {
+      return Notify("all field is required", "error");
+    }
+    try {
+      const res = await fetch(`/api/project/${projectId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectName: projectData.projectName,
+          projectDescription: projectData.projectDescription,
+          userId: projectData.userId,
+        }),
+      });
+      const resData = await res.json();
+      if (resData.status == "success") {
+        Notify(resData.message, "success");
+        set((state) => ({
+          projects: state.projects.map((item) => {
+            if (item.id == projectId) {
+              return resData.data;
+            }
+            return item;
+          }),
         }));
       } else {
         Notify(resData.message, "error");

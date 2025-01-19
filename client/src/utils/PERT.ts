@@ -351,36 +351,40 @@ const pushStartAndEndTask = ({
   });
 };
 const calculatePert = (initTasks: Task[]) => {
-  const { levels, tasksWithLevel } = calculateLevels(initTasks);
-  const { tasks, projectDuration } = calculateStartandEnd(
-    tasksWithLevel,
-    levels
-  );
+  try {
+    const { levels, tasksWithLevel } = calculateLevels(initTasks);
+    const { tasks, projectDuration } = calculateStartandEnd(
+      tasksWithLevel,
+      levels
+    );
 
-  calculateLateStartAndEndAndSlack(tasks, levels, projectDuration);
+    calculateLateStartAndEndAndSlack(tasks, levels, projectDuration);
 
-  const maxLengthOfLevel = Math.max(
-    ...Object.values(levels).map((el) => el.length)
-  );
+    const maxLengthOfLevel = Math.max(
+      ...Object.values(levels).map((el) => el.length)
+    );
 
-  pushStartAndEndTask({ tasks, levels, projectDuration });
-  const nbrOfLevels = Object.keys(levels).length;
+    pushStartAndEndTask({ tasks, levels, projectDuration });
+    const nbrOfLevels = Object.keys(levels).length;
 
-  const { width, height } = calculateCoordinates(
-    tasks,
-    nbrOfLevels,
-    maxLengthOfLevel,
-    levels
-  );
-  const links = getLinks(tasks);
-  return {
-    tasks: tasks,
-    levels,
-    projectDuration,
-    links,
-    width,
-    height,
-  };
+    const { width, height } = calculateCoordinates(
+      tasks,
+      nbrOfLevels,
+      maxLengthOfLevel,
+      levels
+    );
+    const links = getLinks(tasks);
+    return {
+      tasks: tasks,
+      levels,
+      projectDuration,
+      links,
+      width,
+      height,
+    };
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export default calculatePert;

@@ -3,7 +3,7 @@ import { Gantt, ViewMode } from "gantt-task-react";
 import "gantt-task-react/dist/index.css";
 import { useTheme } from "./theme-provider";
 import { TaskType } from "gantt-task-react/dist/types/public-types";
-import usePert from "@/store/pertStore";
+import useProject from "@/store/projectStore";
 function refactorTasks(tasks: Task[], theme: string) {
   const fullYear = new Date().getFullYear();
   const fullMonth = new Date().getMonth();
@@ -19,21 +19,21 @@ function refactorTasks(tasks: Task[], theme: string) {
       backgroundColor:
         theme === "dark"
           ? task.critical
-            ? "red"
-            : "#fff"
+            ? "#f97316"
+            : "#FBF5DD"
           : task.critical
-          ? "red"
+          ? "#f97316"
           : "#000",
     },
   }));
 }
 const GanttContainer = () => {
-  const pertData = usePert((state) => state.pertData);
+  const pertData = useProject.getState().pertData;
   const { theme } = useTheme();
   if (!pertData.tasks) {
     return (
-      <div>
-        <h1>data Not Found...</h1>
+      <div className="w-full h-full flex justify-center items-center">
+        No tasks
       </div>
     );
   }

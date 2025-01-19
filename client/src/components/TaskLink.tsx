@@ -24,7 +24,12 @@ function TaskLink({
   toTask: Task;
   radius: number;
   STROKE: string;
-  selectedTask: number | undefined;
+  selectedTask:
+    | {
+        currentTaskID: number;
+        dependencies: number[];
+      }
+    | undefined;
 }) {
   return fromTask?.y == toTask?.y ? (
     <motion.line
@@ -40,7 +45,12 @@ function TaskLink({
           ? "stroke-red-400"
           : "stroke-foreground"
       } 
-      ${selectedTask != undefined && selectedTask != toTask.id && "blur-sm"}
+      ${
+        selectedTask != undefined &&
+        selectedTask.currentTaskID != toTask.id &&
+        selectedTask.currentTaskID != fromTask.id &&
+        "blur-sm"
+      }
       `}
       // className={
       //   fromTask?.critical && toTask?.critical
@@ -63,7 +73,12 @@ function TaskLink({
           ? "stroke-red-400"
           : "stroke-foreground"
       } 
-      ${selectedTask != undefined && selectedTask != toTask.id && "blur-sm"}
+      ${
+        selectedTask != undefined &&
+        selectedTask.currentTaskID != toTask.id &&
+        selectedTask.currentTaskID != fromTask.id &&
+        "blur-sm"
+      }
       `}
       // className={
       //   fromTask?.critical && toTask?.critical

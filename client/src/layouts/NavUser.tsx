@@ -1,9 +1,8 @@
-import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
+import { ChevronsUpDown, LogOut } from "lucide-react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -17,12 +16,11 @@ import {
 } from "@/components/ui/sidebar";
 import CustomAvatar from "@/components/CustomAvatar";
 import useUser from "@/store/userStore";
-import { Link } from "react-router-dom";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const { user, logout } = useUser();
-
+  const logout = useUser((state) => state.logout);
+  const user = useUser((state) => state.user);
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -56,15 +54,15 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <Link to={`profile/${user?.name}-${user?.familyName}`}>
                 <DropdownMenuItem>
                   <BadgeCheck />
                   Account
                 </DropdownMenuItem>
               </Link>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            </DropdownMenuGroup> 
+            <DropdownMenuSeparator />*/}
             <DropdownMenuItem
               onClick={() => {
                 logout();

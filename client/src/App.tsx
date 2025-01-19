@@ -6,7 +6,6 @@ import Project from "./pages/Project";
 import useUser from "./store/userStore";
 import HomeDashboard from "./pages/HomeDashboard";
 import { Loader } from "lucide-react";
-import Profile from "./pages/Profile";
 function App() {
   const { user, loading } = useUser();
   if (loading) {
@@ -35,7 +34,7 @@ function App() {
         >
           <Route index element={<HomeDashboard />} />
           <Route path=":projectId" element={<Project />} />
-          <Route path="profile/:user-name" element={<Profile />} />
+          {/* <Route path="profile/:user-name" element={<Profile />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>

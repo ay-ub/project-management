@@ -10,32 +10,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Loader } from "lucide-react";
+import { Eye, EyeClosed, Loader } from "lucide-react";
 import useUser from "@/store/userStore";
 export default function Login() {
-  // const navigate = useNavigate();
   const { login, loading } = useUser();
   const [userData, setUserData] = useState({
     email: "johndoe@example.com",
     password: "password123",
   });
+  const [togglePassword, setTogglePassword] = useState(false);
   return (
-    <div className='h-screen  flex justify-center items-center'>
-      <Card className='mx-auto max-w-sm'>
+    <div className="h-screen  flex justify-center items-center">
+      <Card className="mx-auto max-w-sm">
         <CardHeader>
-          <CardTitle className='text-2xl'>Login</CardTitle>
+          <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='grid gap-4'>
-            <div className='grid gap-2'>
-              <Label htmlFor='email'>Email</Label>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
               <Input
-                id='email'
-                type='email'
-                placeholder='m@example.com'
+                id="email"
+                type="email"
+                placeholder="m@example.com"
                 required
                 value={userData.email}
                 onChange={(e) => {
@@ -46,10 +46,10 @@ export default function Login() {
                 }}
               />
             </div>
-            <div className='grid gap-2'>
-              <div className='flex items-center'>
-                <Label htmlFor='password'>Password</Label>
-                <Link to='#' className='ml-auto inline-block text-sm underline'>
+            <div className="grid gap-2 relative">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+                <Link to="#" className="ml-auto inline-block text-sm underline">
                   Forgot your password?
                 </Link>
               </div>
@@ -62,29 +62,49 @@ export default function Login() {
                     password: e.target.value,
                   });
                 }}
-                id='password'
-                type='password'
+                id="password"
+                type={togglePassword ? "text" : "password"}
                 required
               />
+              <span
+                className={`absolute right-3 bottom-2 text-xs cursor-pointer duration-200 ${
+                  !togglePassword ? "opacity-0" : "opacity-100"
+                }`}
+                onClick={() => {
+                  setTogglePassword(!togglePassword);
+                }}
+              >
+                <EyeClosed size={20} />
+              </span>
+              <span
+                className={`absolute right-3 bottom-2 text-xs cursor-pointer duration-200 ${
+                  togglePassword ? "opacity-0" : "opacity-100"
+                }`}
+                onClick={() => {
+                  setTogglePassword(!togglePassword);
+                }}
+              >
+                <Eye size={20} />
+              </span>
             </div>
             <Button
-              type='submit'
-              className='w-full'
+              type="submit"
+              className="w-full"
               onClick={(e) => {
                 e.preventDefault();
                 login(userData);
               }}
             >
-              {loading && <Loader className='animate-spin' />}
+              {loading && <Loader className="animate-spin" />}
               Login
             </Button>
-            <Button variant='outline' className='w-full'>
+            {/* <Button variant="outline" className="w-full">
               Login with Google
-            </Button>
+            </Button> */}
           </div>
-          <div className='mt-4 text-center text-sm'>
+          <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
-            <Link to='/register' className='underline'>
+            <Link to="/register" className="underline">
               Register Now
             </Link>
           </div>

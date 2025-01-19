@@ -22,6 +22,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -33,52 +34,33 @@ import { Task } from "@/types/tasks";
 import { useParams } from "react-router-dom";
 import Notify from "@/lib/Notify";
 import useProject from "@/store/projectStore";
+import hasCycle from "@/utils/detectCycleAndSort";
+import Alert from "./Alert";
 // import detectCycleAndSort from "@/utils/detectCycleAndSort";
 function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const { projectId } = useParams();
 
-  const getTasks = async () => {
-    try {
-      const tasks = await fetch(`http://localhost:3000/project/${projectId}`, {
-        credentials: "include",
-      });
-      const data = await tasks.json();
-      if (data.status === "success") {
-        setTasks(data.data.tasks);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
   const createTask = async () => {
-    // random task Name alphbet
-    const taskName = String.fromCharCode(
-      Math.floor(Math.random() * 26) + 65
-    ).toUpperCase();
+    // get the next alphanumric task name
+    const taskName = String.fromCharCode(65 + tasks.length);
+
     const randomId = Math.floor((Math.random() * 99999) % 999999);
-    setTasks([
-      ...tasks,
+    setTasks((prev) => [
+      ...prev,
       {
-        id:
-          tasks.filter((task) => task.id === randomId).length > 0
-            ? tasks.length * randomId
-            : randomId,
-        taskName:
-          tasks.filter((task) => task.taskName === taskName).length > 0
-            ? `${taskName}${tasks.length}`
-            : taskName,
+        id: randomId,
+        taskName: taskName,
         duration: 1,
         dependencies: [],
       },
     ]);
   };
-  useEffect(() => {
-    getTasks();
-  }, [projectId]);
+
   const handleSaveTasks = async () => {
     try {
       if (projectId) {
+        if (hasCycle(tasks)) return Notify("Cycle detected ", "error");
         const res = await fetch(`/api/task`, {
           method: "POST",
           headers: {
@@ -98,7 +80,24 @@ function Tasks() {
       Notify("Failed to save tasks", "error");
     }
   };
-
+  useEffect(() => {
+    if (projectId != undefined) {
+      const getTasks = async () => {
+        try {
+          const tasks = await fetch(`/api/project/${projectId}`, {
+            credentials: "include",
+          });
+          const data = await tasks.json();
+          if (data.status === "success") {
+            setTasks(data.data.tasks);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      getTasks();
+    }
+  }, [projectId]);
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -115,14 +114,24 @@ function Tasks() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className=" text-nowrap">Task Name</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead className="w-full text-nowrap">Task Name</TableHead>
                 <TableHead>Duration</TableHead>
-                <TableHead className="w-full text-center">Depends on</TableHead>
+                <TableHead className="w-full text-center text-nowrap">
+                  Depends on
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tasks?.map((task, index) => {
-                return <CustTask key={index} task={task} tasks={tasks} />;
+                return (
+                  <CustTask
+                    key={index}
+                    task={task}
+                    tasks={tasks}
+                    setTasks={setTasks}
+                  />
+                );
               })}
               <TableRow>
                 <TableCell className="font-medium text-center">
@@ -136,36 +145,113 @@ function Tasks() {
             </TableBody>
           </Table>
         </ScrollArea>
-        <Button className="w-full" onClick={handleSaveTasks}>
-          <Save /> Save
-        </Button>
+        <Alert
+          title="Save Tasks"
+          description="Are you sure you want to save?"
+          action="Save"
+          cancel="Cancel"
+          trigger={
+            <Button className="w-full">
+              <Save /> Save
+            </Button>
+          }
+          func={handleSaveTasks}
+        />
       </SheetContent>
     </Sheet>
   );
 }
 
-const CustTask = ({ task, tasks }: { task: Task; tasks: Task[] }) => {
-  const allDep = tasks?.map((dep) => {
-    return {
-      id: dep.id,
-      taskName: dep.taskName,
-    };
-  });
+const CustTask = ({
+  task,
+  tasks,
+  setTasks,
+}: {
+  task: Task;
+  tasks: Task[];
+  setTasks: (tasks: Task[]) => void;
+}) => {
   const [dependencies, setDependencies] = useState<number[]>([]);
-  useEffect(() => {
-    if (task?.dependencies?.includes(-1)) {
-      task.dependencies = [];
+
+  // بناء خريطة العلاقات
+  const buildTaskMap = (tasks: Task[]) => {
+    const map = new Map<number, number[]>();
+    tasks.forEach((t) => {
+      map.set(t.id, t.dependencies || []);
+    });
+    return map;
+  };
+
+  // دالة التحقق من وجود الحلقات
+  const hasCycle = (
+    currentId: number,
+    depId: number,
+    taskMap: Map<number, number[]>,
+    visited = new Set<number>()
+  ): boolean => {
+    if (visited.has(depId)) return true; // حلقة وُجدت
+    visited.add(depId);
+
+    const dep = taskMap.get(depId) || [];
+    for (const d of dep) {
+      if (d === currentId || hasCycle(currentId, d, taskMap, visited)) {
+        return true;
+      }
     }
-    setDependencies(task?.dependencies || []);
-  }, []);
+    return false;
+  };
+
+  const [filteredDependencies, setFilteredDependencies] = useState<
+    { id: number; taskName: string }[]
+  >([]);
+
+  useEffect(() => {
+    const taskMap = buildTaskMap(tasks);
+    const filtered = tasks
+      .filter(
+        (dep) =>
+          dep.id !== task.id &&
+          !hasCycle(task.id, dep.id, taskMap) &&
+          dep.id != -1
+      )
+      .map((dep) => ({
+        id: dep.id,
+        taskName: dep.taskName,
+      }));
+    setFilteredDependencies(filtered);
+  }, [tasks, task]);
+
+  useEffect(() => {
+    setDependencies(task.dependencies || []);
+  }, [task]);
+
   return (
     <TableRow>
-      <TableCell className="font-medium text-center">X</TableCell>
+      <TableCell className="w-min">
+        <Alert
+          title="Delete Task"
+          description="Are you sure you want to delete this task?"
+          action="Delete"
+          cancel="Cancel"
+          trigger={<Button variant="destructive">Delete Task</Button>}
+          func={() => {
+            const updatedTasks = tasks.filter((t) => t.id !== task.id);
+            setTasks(updatedTasks);
+          }}
+        />
+      </TableCell>
       <TableCell className="font-medium text-center">
         <Input
           type="text"
           defaultValue={task?.taskName}
           onChange={(e) => {
+            const value = e.target.value;
+            if (value === "") {
+              return Notify("Task name can't be empty", "error");
+            }
+            if (tasks.filter((t) => t.taskName === value).length > 1) {
+              return Notify("Task name must be unique", "error");
+            }
             task.taskName = e.target.value;
           }}
           className="text-center w-[70px]"
@@ -187,66 +273,81 @@ const CustTask = ({ task, tasks }: { task: Task; tasks: Task[] }) => {
         <DropdownMenu>
           <DropdownMenuTrigger
             asChild
-            className="w-full  h-fit flex justify-start"
+            className="w-full h-fit flex justify-start"
           >
-            <Button variant="outline">
-              <span className="flex items-center gap-1 flex-wrap">
-                {task?.dependencies && task?.dependencies.length > 0
-                  ? task?.dependencies.map((taskDep, i) => {
-                      const dep = allDep?.find((dep) => dep.id === taskDep);
-                      return (
-                        (dep?.taskName && (
-                          <Badge key={i} className="text-xs">
+            <Button variant="outline" className="w-full">
+              <span className="flex items-center gap-1 flex-wrap w-full">
+                {dependencies && dependencies.length > 0
+                  ? dependencies
+                      .filter((item) => item != -1)
+                      .map((taskDep, i) => {
+                        const dep = tasks.find((dep) => dep.id === taskDep);
+                        if (!dep) {
+                          return null;
+                        }
+                        return (
+                          <Badge key={i} className="bg-primary">
                             {dep?.taskName}
                           </Badge>
-                        )) || (
-                          <Badge key={i} className="text-xs">
-                            {taskDep}
-                          </Badge>
-                        )
-                      );
-                    })
+                        );
+                      })
                   : "No dependencies"}
               </span>
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent className="w-56">
             <DropdownMenuLabel>select dependencies</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              onClick={() => {
-                setDependencies([]);
-                task.dependencies = [];
-              }}
-            >
-              <Button variant="destructive" className="w-full">
-                Clear
-              </Button>
-            </DropdownMenuCheckboxItem>
-            {allDep?.map((ts, index) => (
+            {filteredDependencies.length === 0 ? (
+              <DropdownMenuItem disabled>
+                No dependencies available
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={() => {
+                  setDependencies([]);
+                  task.dependencies = [];
+                }}
+              >
+                <Button className="w-full">Clear all dependencies</Button>
+              </DropdownMenuItem>
+            )}
+            {filteredDependencies.map((ts, index) => (
               <DropdownMenuCheckboxItem
                 key={index}
-                checked={dependencies?.includes(ts.id)}
+                checked={dependencies.includes(ts.id)}
                 onCheckedChange={(checked) => {
                   if (checked) {
-                    setDependencies([...dependencies, ts.id]);
-                    task.dependencies = [...dependencies, ts.id];
-                    console.log("task", task);
+                    const updatedDeps = [...dependencies, ts.id];
+                    setDependencies(updatedDeps);
+                    setTasks(
+                      tasks.map((t) => {
+                        if (t.id === task.id) {
+                          t.dependencies = updatedDeps;
+                        }
+                        return t;
+                      })
+                    );
                   } else {
-                    setDependencies([
-                      ...dependencies.filter((dep) => dep !== ts.id),
-                    ]);
-                    task.dependencies = [
-                      ...dependencies.filter((dep) => dep !== ts.id),
-                    ];
+                    const updatedDeps = dependencies.filter(
+                      (dep) => dep !== ts.id
+                    );
+                    setDependencies(updatedDeps);
+                    setTasks(
+                      tasks.map((t) => {
+                        if (t.id === task.id) {
+                          t.dependencies = updatedDeps;
+                        }
+                        return t;
+                      })
+                    );
                   }
                 }}
               >
-                {
-                  <span className="flex items-center gap-1">
-                    <Badge>{ts.taskName}</Badge>
-                  </span>
-                }
+                <span className="flex  w-full text-sm px-4 font-bold">
+                  {ts.taskName}
+                </span>
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>

@@ -10,5 +10,4 @@ export type PertData = {
   links: { from: number; to: number }[];
   width: number;
   height: number;
-  radius: number;
 };

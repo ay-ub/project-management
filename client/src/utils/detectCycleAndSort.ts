@@ -1,45 +1,49 @@
-function detectCycleAndSort(tasks) {
-  const graph = new Map();
-  const inDegree = new Map();
-  const result = [];
+import { Task } from "@/types/tasks";
 
-  // بناء الرسم البياني
+function hasCycle(tasks: Task[]): boolean {
+  // بناء خريطة المهام بالاعتماد على العلاقات
+  const taskMap = new Map<number, number[]>();
   tasks.forEach((task) => {
-    graph.set(task.id, task.dependencies || []);
-    inDegree.set(task.id, 0);
+    taskMap.set(task.id, task.dependencies || []);
   });
 
-  // حساب الدرجة الداخلة لكل عقدة
-  for (const [node, dependencies] of graph) {
-    dependencies.forEach((dep) => {
-      inDegree.set(dep, (inDegree.get(dep) || 0) + 1);
-    });
+  const visited = new Set<number>(); // المهام التي تمت زيارتها نهائيًا
+  const visiting = new Set<number>(); // المهام التي تتم زيارتها حاليًا أثناء البحث
+
+  // خوارزمية DFS للتحقق من الحلقات
+  const dfs = (taskId: number): boolean => {
+    if (visiting.has(taskId)) {
+      return true; // وُجدت حلقة
+    }
+    if (visited.has(taskId)) {
+      return false; // تمت زيارتها مسبقًا
+    }
+
+    // أضف المهمة إلى visiting
+    visiting.add(taskId);
+
+    // تحقق من المهام التابعة
+    const dependencies = taskMap.get(taskId) || [];
+    for (const dep of dependencies) {
+      if (dfs(dep)) {
+        return true;
+      }
+    }
+
+    // إزالة المهمة من visiting وإضافتها إلى visited
+    visiting.delete(taskId);
+    visited.add(taskId);
+    return false;
+  };
+
+  // التحقق من الحلقات لكل مهمة
+  for (const task of tasks) {
+    if (dfs(task.id)) {
+      return true; // وُجدت حلقة
+    }
   }
 
-  // جمع العقد التي ليس لها تبعيات
-  const queue = [];
-  for (const [node, degree] of inDegree) {
-    if (degree === 0) queue.push(node);
-  }
-
-  // ترتيب توبيولوجي
-  while (queue.length > 0) {
-    const current = queue.shift();
-    result.push(current);
-
-    // تحديث الدرجة الداخلة للعقد المرتبطة
-    graph.get(current)?.forEach((dep) => {
-      inDegree.set(dep, inDegree.get(dep) - 1);
-      if (inDegree.get(dep) === 0) queue.push(dep);
-    });
-  }
-
-  // الكشف عن الحلقات
-  if (result.length !== tasks.length) {
-    throw new Error("Deadlock detected: There is a circular dependency!");
-  }
-
-  return result;
+  return false; // لا توجد حلقات
 }
 
-export default detectCycleAndSort;
+export default hasCycle;

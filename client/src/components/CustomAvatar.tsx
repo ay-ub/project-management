@@ -1,5 +1,11 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-const CustomAvatar = ({ name }: { name: string }) => {
+const CustomAvatar = ({
+  name,
+  className = "w-8 h-8",
+}: {
+  name: string;
+  className?: string;
+}) => {
   function getInitials() {
     const words = name.split(" ");
     // console.log(words);
@@ -18,9 +24,8 @@ const CustomAvatar = ({ name }: { name: string }) => {
     }
   }
   return (
-    <Avatar className='h-8 w-8 rounded-lg'>
-      {/* <AvatarImage src='https://github.com/shadcn.png' alt='@shadcn' /> */}
-      <AvatarFallback className='rounded-lg'>{getInitials()}</AvatarFallback>
+    <Avatar className={`rounded-lg ${className}`}>
+      <AvatarFallback className="rounded-lg">{getInitials()}</AvatarFallback>
     </Avatar>
   );
 };
