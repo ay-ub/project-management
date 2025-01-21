@@ -55,7 +55,19 @@ function Tasks() {
       },
     ]);
   };
-
+  const getTasks = async () => {
+    try {
+      const tasks = await fetch(`/api/project/${projectId}`, {
+        credentials: "include",
+      });
+      const data = await tasks.json();
+      if (data.status === "success") {
+        setTasks(data.data.tasks);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const handleSaveTasks = async () => {
     try {
       if (projectId) {
@@ -71,6 +83,7 @@ function Tasks() {
         if (data.status === "success") {
           Notify("Tasks saved successfully", "success");
           useProject.getState().featchProjectDetails(parseInt(projectId));
+          getTasks();
         }
       }
     } catch (error) {
@@ -80,19 +93,6 @@ function Tasks() {
   };
   useEffect(() => {
     if (projectId != undefined) {
-      const getTasks = async () => {
-        try {
-          const tasks = await fetch(`/api/project/${projectId}`, {
-            credentials: "include",
-          });
-          const data = await tasks.json();
-          if (data.status === "success") {
-            setTasks(data.data.tasks);
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      };
       getTasks();
     }
   }, [projectId]);
@@ -126,24 +126,18 @@ function Tasks() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks?.map((task, index) => {
+              {tasks?.map((task) => {
                 return (
                   <CustTask
                     handleSaveTasks={handleSaveTasks}
-                    key={index}
+                    key={task.id}
                     task={task}
                     tasks={tasks}
                     setTasks={setTasks}
                   />
                 );
               })}
-              <TableRow>
-                <TableCell className="font-medium text-center">
-                  {/* btn  */}
-                </TableCell>
-                <TableCell className="text-center"></TableCell>
-                <TableCell className="flex items-center flex-wrap gap-1"></TableCell>
-              </TableRow>
+              <TableRow></TableRow>
             </TableBody>
           </Table>
         </ScrollArea>
@@ -181,51 +175,9 @@ const CustTask = ({
 }) => {
   const [dependencies, setDependencies] = useState<number[]>([]);
 
-  // const buildTaskMap = (tasks: Task[]) => {
-  //   const map = new Map<number, number[]>();
-  //   tasks.forEach((t) => {
-  //     map.set(t.id, t.dependencies || []);
-  //   });
-  //   return map;
-  // };
-
-  // const hasCycle = (
-  //   currentId: number,
-  //   depId: number,
-  //   taskMap: Map<number, number[]>,
-  //   visited = new Set<number>()
-  // ): boolean => {
-  //   if (visited.has(depId)) return true;
-  //   visited.add(depId);
-
-  //   const dep = taskMap.get(depId) || [];
-  //   for (const d of dep) {
-  //     if (d === currentId || hasCycle(currentId, d, taskMap, visited)) {
-  //       return true;
-  //     }
-  //   }
-  //   return false;
-  // };
-
   const [filteredDependencies, setFilteredDependencies] = useState<
     { id: number; taskName: string }[]
   >([]);
-
-  // useEffect(() => {
-  //   const taskMap = buildTaskMap(tasks);
-  //   const filtered = tasks
-  //     .filter(
-  //       (dep) =>
-  //         dep.id !== task.id &&
-  //         !hasCycle(task.id, dep.id, taskMap) &&
-  //         dep.id != -1
-  //     )
-  //     .map((dep) => ({
-  //       id: dep.id,
-  //       taskName: dep.taskName,
-  //     }));
-  //   setFilteredDependencies(filtered);
-  // }, [tasks, task]);
 
   useEffect(() => {
     setDependencies(task.dependencies || []);

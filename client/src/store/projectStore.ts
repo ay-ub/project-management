@@ -1,7 +1,6 @@
 import Notify from "@/lib/Notify";
 import { PertData } from "@/types/Pert";
 import { project } from "@/types/project";
-import { Task } from "@/types/tasks";
 import calculatePert from "@/utils/PERT";
 import { create } from "zustand";
 export type ProjectState = {
@@ -29,7 +28,6 @@ export type ProjectState = {
     },
     projectId: number
   ) => Promise<void>;
-  setTasks: (tasks: Task[]) => void;
 };
 const useProject = create<ProjectState>((set) => ({
   projects: [],
@@ -197,14 +195,6 @@ const useProject = create<ProjectState>((set) => ({
     } catch (error) {
       console.log(error);
     }
-  },
-  setTasks: (tasks) => {
-    set((state) => ({
-      currentProject: {
-        ...state.currentProject,
-        tasks,
-      },
-    }));
   },
 }));
 
