@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
 import { useTheme } from "./theme-provider";
 import TaskCircle from "./TaskCircle";
@@ -25,7 +24,7 @@ function Pert() {
     height: 0,
   });
   const STROKE = theme === "dark" ? "#ccc" : "#333";
-  const initTasks = useProject.getState().currentProject.tasks;
+  const initTasks = useProject((state) => state.currentProject.tasks);
   useEffect(() => {
     if (initTasks && initTasks.length > 0 && pertData.tasks.length === 0) {
       const tasks = initTasks.map((task) => {
