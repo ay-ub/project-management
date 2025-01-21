@@ -33,6 +33,8 @@ const useUser = create<UserState>((set) => ({
           user: data.data,
         });
         Notify(`welcome ${data.data.name} ${data.data.familyName}`, "success");
+      } else {
+        Notify(`email or password invalid`, "error");
       }
     } catch (error) {
       console.log(error);

@@ -32,9 +32,6 @@ const calculateCoordinates = (
           marginX;
         task.y = yGap * (index + 1) + circleHeight * index + marginY;
       }
-      if (task?.taskName == "Start") {
-        console.log(task);
-      }
     });
   });
   return { width, height };

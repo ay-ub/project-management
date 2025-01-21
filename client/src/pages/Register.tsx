@@ -14,10 +14,10 @@ import useUser from "@/store/userStore";
 import { Eye, EyeClosed, Loader } from "lucide-react";
 function Register() {
   const [userData, setUserData] = useState({
-    name: "Mohamed",
-    familyName: "ben ali",
-    email: "mohamedBenAli@gmail.com",
-    password: "password123",
+    name: "",
+    familyName: "",
+    email: "",
+    password: "",
   });
 
   const { register, registerLoading } = useUser();

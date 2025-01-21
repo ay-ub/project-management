@@ -13,7 +13,9 @@ import { useState } from "react";
 import { Eye, EyeClosed, Loader } from "lucide-react";
 import useUser from "@/store/userStore";
 export default function Login() {
-  const { login, loading } = useUser();
+  // const { login, loading } = useUser();
+  const login = useUser((state) => state.login);
+  const loading = useUser((state) => state.loading);
   const [userData, setUserData] = useState({
     email: "johndoe@example.com",
     password: "password123",

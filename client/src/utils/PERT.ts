@@ -343,12 +343,14 @@ const pushStartAndEndTask = ({
   levels[levelOfEndTask] = [Math.max(...tasks.map((el) => el.id))];
   // add at first levels[levelOfStartTask] = [-1];
   levels[levelOfStartTask] = [-1];
-  levels[levelOfStartTask + 1].forEach((taskID) => {
-    const task = tasks.find((task) => task.id == taskID);
-    if (task) {
-      task.dependencies?.push(startTaskId);
-    }
-  });
+  if (levels[levelOfStartTask + 1] != undefined) {
+    levels[levelOfStartTask + 1].forEach((taskID) => {
+      const task = tasks.find((task) => task.id == taskID);
+      if (task) {
+        task.dependencies?.push(startTaskId);
+      }
+    });
+  }
 };
 const calculatePert = (initTasks: Task[]) => {
   try {

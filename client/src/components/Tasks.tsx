@@ -43,8 +43,7 @@ function Tasks() {
 
   const createTask = async () => {
     // get the next alphanumric task name
-    const taskName = String.fromCharCode(65 + tasks.length);
-
+    const taskName = String.fromCharCode(65 + Math.floor(Math.random() * 26));
     const randomId = Math.floor((Math.random() * 99999) % 999999);
     setTasks((prev) => [
       ...prev,
@@ -69,7 +68,6 @@ function Tasks() {
           body: JSON.stringify({ tasks, projectId }),
         });
         const data = await res.json();
-        console.log("data", data);
         if (data.status === "success") {
           Notify("Tasks saved successfully", "success");
           useProject.getState().featchProjectDetails(parseInt(projectId));
@@ -98,6 +96,11 @@ function Tasks() {
       getTasks();
     }
   }, [projectId]);
+  useEffect(() => {
+    if (tasks) {
+      console.log(tasks);
+    }
+  }, [tasks]);
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -117,7 +120,7 @@ function Tasks() {
                 <TableHead>Action</TableHead>
                 <TableHead className="w-full text-nowrap">Task Name</TableHead>
                 <TableHead>Duration</TableHead>
-                <TableHead className="w-full text-center text-nowrap">
+                <TableHead className="w-[100px] text-center text-nowrap">
                   Depends on
                 </TableHead>
               </TableRow>
@@ -126,6 +129,7 @@ function Tasks() {
               {tasks?.map((task, index) => {
                 return (
                   <CustTask
+                    handleSaveTasks={handleSaveTasks}
                     key={index}
                     task={task}
                     tasks={tasks}
@@ -135,9 +139,7 @@ function Tasks() {
               })}
               <TableRow>
                 <TableCell className="font-medium text-center">
-                  <Button onClick={createTask}>
-                    <Plus /> Add Task
-                  </Button>
+                  {/* btn  */}
                 </TableCell>
                 <TableCell className="text-center"></TableCell>
                 <TableCell className="flex items-center flex-wrap gap-1"></TableCell>
@@ -145,18 +147,23 @@ function Tasks() {
             </TableBody>
           </Table>
         </ScrollArea>
-        <Alert
-          title="Save Tasks"
-          description="Are you sure you want to save?"
-          action="Save"
-          cancel="Cancel"
-          trigger={
-            <Button className="w-full">
-              <Save /> Save
-            </Button>
-          }
-          func={handleSaveTasks}
-        />
+        <div className=" flex gap-2 items-center">
+          <Alert
+            title="Save Tasks"
+            description="Are you sure you want to save?"
+            action="Save"
+            cancel="Cancel"
+            trigger={
+              <Button className="w-full">
+                <Save /> Save
+              </Button>
+            }
+            func={handleSaveTasks}
+          />
+          <Button onClick={createTask} className="w-full">
+            <Plus /> Add Task
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );
@@ -170,61 +177,71 @@ const CustTask = ({
   task: Task;
   tasks: Task[];
   setTasks: (tasks: Task[]) => void;
+  handleSaveTasks: () => void;
 }) => {
   const [dependencies, setDependencies] = useState<number[]>([]);
 
-  // بناء خريطة العلاقات
-  const buildTaskMap = (tasks: Task[]) => {
-    const map = new Map<number, number[]>();
-    tasks.forEach((t) => {
-      map.set(t.id, t.dependencies || []);
-    });
-    return map;
-  };
+  // const buildTaskMap = (tasks: Task[]) => {
+  //   const map = new Map<number, number[]>();
+  //   tasks.forEach((t) => {
+  //     map.set(t.id, t.dependencies || []);
+  //   });
+  //   return map;
+  // };
 
-  // دالة التحقق من وجود الحلقات
-  const hasCycle = (
-    currentId: number,
-    depId: number,
-    taskMap: Map<number, number[]>,
-    visited = new Set<number>()
-  ): boolean => {
-    if (visited.has(depId)) return true; // حلقة وُجدت
-    visited.add(depId);
+  // const hasCycle = (
+  //   currentId: number,
+  //   depId: number,
+  //   taskMap: Map<number, number[]>,
+  //   visited = new Set<number>()
+  // ): boolean => {
+  //   if (visited.has(depId)) return true;
+  //   visited.add(depId);
 
-    const dep = taskMap.get(depId) || [];
-    for (const d of dep) {
-      if (d === currentId || hasCycle(currentId, d, taskMap, visited)) {
-        return true;
-      }
-    }
-    return false;
-  };
+  //   const dep = taskMap.get(depId) || [];
+  //   for (const d of dep) {
+  //     if (d === currentId || hasCycle(currentId, d, taskMap, visited)) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // };
 
   const [filteredDependencies, setFilteredDependencies] = useState<
     { id: number; taskName: string }[]
   >([]);
 
-  useEffect(() => {
-    const taskMap = buildTaskMap(tasks);
-    const filtered = tasks
-      .filter(
-        (dep) =>
-          dep.id !== task.id &&
-          !hasCycle(task.id, dep.id, taskMap) &&
-          dep.id != -1
-      )
-      .map((dep) => ({
-        id: dep.id,
-        taskName: dep.taskName,
-      }));
-    setFilteredDependencies(filtered);
-  }, [tasks, task]);
+  // useEffect(() => {
+  //   const taskMap = buildTaskMap(tasks);
+  //   const filtered = tasks
+  //     .filter(
+  //       (dep) =>
+  //         dep.id !== task.id &&
+  //         !hasCycle(task.id, dep.id, taskMap) &&
+  //         dep.id != -1
+  //     )
+  //     .map((dep) => ({
+  //       id: dep.id,
+  //       taskName: dep.taskName,
+  //     }));
+  //   setFilteredDependencies(filtered);
+  // }, [tasks, task]);
 
   useEffect(() => {
     setDependencies(task.dependencies || []);
-  }, [task]);
+    setFilteredDependencies(
+      tasks.filter(
+        (item) => item.id != task.id && !item.dependencies?.includes(task.id)
+      )
+    );
+  }, [tasks]);
 
+  const handleDeleteTask = () => {
+    tasks.forEach(
+      (t) => (t.dependencies = t.dependencies?.filter((dep) => dep !== task.id))
+    );
+    setTasks(tasks.filter((t) => t.id !== task.id));
+  };
   return (
     <TableRow>
       <TableCell className="w-min">
@@ -234,10 +251,7 @@ const CustTask = ({
           action="Delete"
           cancel="Cancel"
           trigger={<Button variant="destructive">Delete Task</Button>}
-          func={() => {
-            const updatedTasks = tasks.filter((t) => t.id !== task.id);
-            setTasks(updatedTasks);
-          }}
+          func={handleDeleteTask}
         />
       </TableCell>
       <TableCell className="font-medium text-center">

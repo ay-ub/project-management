@@ -9,7 +9,11 @@ import { Loader } from "lucide-react";
 function App() {
   const { user, loading } = useUser();
   if (loading) {
-    return <Loader className="animate-spin " />;
+    return (
+      <div className="flex items-center justify-center h-screen w-screen">
+        <Loader className="animate-spin " />
+      </div>
+    );
   }
   return (
     <BrowserRouter>

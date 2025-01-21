@@ -1,6 +1,8 @@
 import Notify from "@/lib/Notify";
 import { PertData } from "@/types/Pert";
 import { project } from "@/types/project";
+import { Task } from "@/types/tasks";
+import calculatePert from "@/utils/PERT";
 import { create } from "zustand";
 export type ProjectState = {
   projects: project[];
@@ -10,7 +12,10 @@ export type ProjectState = {
   pertData: PertData;
   featchProjects: (email: string) => Promise<void>;
   featchProjectDetails: (projectId: number) => Promise<void>;
-  fetchDeletProject: (projectId: number) => Promise<void>;
+  fetchDeletProject: (
+    projectId: number,
+    navigate: (path: string) => void
+  ) => Promise<void>;
   fetchCreateProject: (projectData: {
     userId: string;
     projectName: string;
@@ -24,6 +29,7 @@ export type ProjectState = {
     },
     projectId: number
   ) => Promise<void>;
+  setTasks: (tasks: Task[]) => void;
 };
 const useProject = create<ProjectState>((set) => ({
   projects: [],
@@ -60,13 +66,17 @@ const useProject = create<ProjectState>((set) => ({
       const res = await fetch(`/api/project/${projectId}`);
 
       const currentProjectData = await res.json();
-      console.log(currentProjectData);
       if (
         currentProjectData?.status == "success" &&
         currentProjectData.data.tasks.length > 0
       ) {
         set({
           currentProject: currentProjectData.data,
+        });
+        const result = calculatePert(currentProjectData.data.tasks);
+        if (!result) return;
+        set({
+          pertData: result,
         });
       } else if (
         currentProjectData?.status == "success" &&
@@ -90,7 +100,7 @@ const useProject = create<ProjectState>((set) => ({
       });
     }
   },
-  fetchDeletProject: async (projectId) => {
+  fetchDeletProject: async (projectId, navigate) => {
     try {
       const res = await fetch(`/api/project/${projectId}`, {
         method: "delete",
@@ -104,10 +114,14 @@ const useProject = create<ProjectState>((set) => ({
             projects: prev.projects.filter((item) => item.id != projectId),
           };
         });
-        if (projectId == useProject.getState().currentProject.id) {
+        if (
+          projectId == useProject.getState().currentProject.id ||
+          useProject.getState().projects.length == 0
+        ) {
           set({
             currentProject: {} as project,
           });
+          navigate("/dashboard");
         }
       } else {
         Notify("project not deleted!", "error");
@@ -183,6 +197,14 @@ const useProject = create<ProjectState>((set) => ({
     } catch (error) {
       console.log(error);
     }
+  },
+  setTasks: (tasks) => {
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject,
+        tasks,
+      },
+    }));
   },
 }));
 

@@ -71,7 +71,7 @@ const TaskCircle = React.memo(
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {/* <motion.circle
+        <motion.circle
           initial="hidden"
           animate="visible"
           variants={draw}
@@ -84,7 +84,8 @@ const TaskCircle = React.memo(
           } task-circle `}
           strokeWidth="2"
           fill={task?.critical ? criticalColor : bgColor}
-        /> */}
+        />
+        {/*
         <motion.rect
           initial="hidden"
           animate="visible"
@@ -99,7 +100,7 @@ const TaskCircle = React.memo(
           strokeWidth="1"
           rx={"10"}
           ry={"10"}
-        />
+        /> */}
         <line
           x1={cx - Math.sqrt(radius ** 2 - (radius / 3) ** 2)}
           y1={cy - radius / 3}

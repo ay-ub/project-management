@@ -28,8 +28,8 @@ function refactorTasks(tasks: Task[], theme: string) {
   }));
 }
 const GanttContainer = () => {
-  const pertData = useProject.getState().pertData;
   const { theme } = useTheme();
+  const pertData = useProject.getState().pertData;
   if (!pertData.tasks) {
     return (
       <div className="w-full h-full flex justify-center items-center">

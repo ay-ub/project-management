@@ -7,7 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import useProject from "@/store/projectStore";
 import CustomAvatar from "@/components/CustomAvatar";
@@ -25,11 +25,10 @@ export function NavProjects() {
   const user = useUser((state) => state.user);
   useEffect(() => {
     if (user?.email) {
-      console.log(user?.email);
       featchProjects(user?.email);
     }
   }, []);
-
+  const navigate = useNavigate();
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel className="text-base flex items-center justify-between">
@@ -63,7 +62,7 @@ export function NavProjects() {
                   title="Delete Project"
                   description={`Are you sure you want to delete ${item.projectName} project?`}
                   func={() => {
-                    fetchDeletProject(item.id);
+                    fetchDeletProject(item.id, navigate);
                   }}
                   cancel="Cancel"
                   action="Delete"
