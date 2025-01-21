@@ -11,19 +11,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import useUser from "@/store/userStore";
-import { Loader } from "lucide-react";
+import { Eye, EyeClosed, Loader } from "lucide-react";
 function Register() {
   const [userData, setUserData] = useState({
-    name: "John",
-    familyName: "Doe",
-    email: "ayoub@example.com",
-    password: "password123",
+    name: "",
+    familyName: "",
+    email: "",
+    password: "",
   });
 
   const { register, registerLoading } = useUser();
   const handleRegister = () => {
     register(userData);
   };
+  const [togglePassword, setTogglePassword] = useState(false);
+
   return (
     <div className="h-screen flex justify-center items-center">
       <Card className="mx-auto ">
@@ -85,11 +87,11 @@ function Register() {
                 required
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 relative">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
+                type={togglePassword ? "text" : "password"}
                 defaultValue={userData.password}
                 onChange={(e) => {
                   setUserData({
@@ -100,12 +102,32 @@ function Register() {
                 required
                 placeholder="create a passwoord"
               />
+              <span
+                className={`absolute right-3 bottom-2 text-xs cursor-pointer duration-200 ${
+                  !togglePassword ? "opacity-0" : "opacity-100"
+                }`}
+                onClick={() => {
+                  setTogglePassword(!togglePassword);
+                }}
+              >
+                <EyeClosed size={20} />
+              </span>
+              <span
+                className={`absolute right-3 bottom-2 text-xs cursor-pointer duration-200 ${
+                  togglePassword ? "opacity-0" : "opacity-100"
+                }`}
+                onClick={() => {
+                  setTogglePassword(!togglePassword);
+                }}
+              >
+                <Eye size={20} />
+              </span>
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 relative">
               <Label htmlFor="ConfirmPassword">Password confirmation</Label>
               <Input
                 id="ConfirmPassword"
-                type="password"
+                type={togglePassword ? "text" : "password"}
                 onChange={(e) => {
                   setUserData({
                     ...userData,
@@ -116,6 +138,26 @@ function Register() {
                 required
                 placeholder="Re-enter password"
               />
+              <span
+                className={`absolute right-3 bottom-2 text-xs cursor-pointer duration-200 ${
+                  !togglePassword ? "opacity-0" : "opacity-100"
+                }`}
+                onClick={() => {
+                  setTogglePassword(!togglePassword);
+                }}
+              >
+                <EyeClosed size={20} />
+              </span>
+              <span
+                className={`absolute right-3 bottom-2 text-xs cursor-pointer duration-200 ${
+                  togglePassword ? "opacity-0" : "opacity-100"
+                }`}
+                onClick={() => {
+                  setTogglePassword(!togglePassword);
+                }}
+              >
+                <Eye size={20} />
+              </span>
             </div>
             <Button type="submit" className="w-full" onClick={handleRegister}>
               {registerLoading && <Loader className="animate-spin mx-2" />}{" "}

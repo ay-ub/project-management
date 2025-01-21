@@ -1,6 +1,9 @@
 import Notify from "@/lib/Notify";
 import { User } from "@/types/user";
 import { create } from "zustand";
+import useProject from "./projectStore";
+import { PertData } from "@/types/Pert";
+import { project } from "@/types/project";
 interface UserState {
   user: User | null;
   loading: boolean;
@@ -30,6 +33,8 @@ const useUser = create<UserState>((set) => ({
           user: data.data,
         });
         Notify(`welcome ${data.data.name} ${data.data.familyName}`, "success");
+      } else {
+        Notify(`email or password invalid`, "error");
       }
     } catch (error) {
       console.log(error);
@@ -50,6 +55,13 @@ const useUser = create<UserState>((set) => ({
       if (isLogout.status === "success") {
         set({
           user: null,
+        });
+        useProject.setState({
+          projects: [],
+          currentProject: {} as project,
+          loading: false,
+          projectsLoading: false,
+          pertData: {} as PertData,
         });
         Notify(isLogout.message, "success");
       }

@@ -9,7 +9,11 @@ import { Loader } from "lucide-react";
 function App() {
   const { user, loading } = useUser();
   if (loading) {
-    return <Loader className="animate-spin " />;
+    return (
+      <div className="flex items-center justify-center h-screen w-screen">
+        <Loader className="animate-spin " />
+      </div>
+    );
   }
   return (
     <BrowserRouter>
@@ -34,6 +38,7 @@ function App() {
         >
           <Route index element={<HomeDashboard />} />
           <Route path=":projectId" element={<Project />} />
+          {/* <Route path="profile/:user-name" element={<Profile />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>

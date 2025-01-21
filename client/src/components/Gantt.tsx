@@ -1,95 +1,56 @@
-import useProject from "@/store/projectStore";
 import { Task } from "@/types/tasks";
 import { Gantt, ViewMode } from "gantt-task-react";
 import "gantt-task-react/dist/index.css";
-function refactorTasks(tasks: Task[]) {
+import { useTheme } from "./theme-provider";
+import { TaskType } from "gantt-task-react/dist/types/public-types";
+import useProject from "@/store/projectStore";
+function refactorTasks(tasks: Task[], theme: string) {
+  const fullYear = new Date().getFullYear();
+  const fullMonth = new Date().getMonth();
   return tasks.map((task) => ({
-    start: new Date(2020, 0, (task.start ?? 0) + 1),
-    end: new Date(2020, 0, (task.end ?? 0) + 1),
+    start: new Date(fullYear, fullMonth, (task.start ?? 0) + 1),
+    end: new Date(fullYear, fullMonth, (task.end ?? 0) + 1),
     name: task.taskName,
-    id: `Task ${task.id}`,
-    type: "task",
+    id: `${task.id}`,
+    type: "Task" as TaskType,
     progress: 0,
-    dependencies: task.dependencies?.map((dep) => `Task ${dep}`),
+    dependencies: task.dependencies?.map((dep) => `${dep}`),
+    styles: {
+      backgroundColor:
+        theme === "dark"
+          ? task.critical
+            ? "#f97316"
+            : "#FBF5DD"
+          : task.critical
+          ? "#f97316"
+          : "#000",
+    },
   }));
 }
 const GanttContainer = () => {
-  // const tasks: Task[] = [
-  //   {
-  //     start: new Date(2020, 1, 1),
-  //     end: new Date(2020, 1, 2),
-  //     name: "Idea",
-  //     id: "Task 0",
-  //     type: "task",
-  //     progress: 0,
-  //     dependencies: ["Task 1"],
-  //   },
-  //   {
-  //     start: new Date(2020, 1, 2),
-  //     end: new Date(2020, 1, 3),
-  //     name: "Planning",
-  //     id: "Task 1",
-  //     type: "task",
-  //     progress: 0,
-  //   },
-  //   {
-  //     start: new Date(2020, 1, 3),
-  //     end: new Date(2020, 1, 4),
-  //     name: "Dev",
-  //     id: "Task 2",
-  //     type: "task",
-  //     progress: 0,
-  //     dependencies: ["Task 1", "Task 0"],
-  //   },
-  //   {
-  //     start: new Date(2020, 1, 4),
-  //     end: new Date(2020, 1, 5),
-  //     name: "Testing",
-  //     id: "Task 3",
-  //     type: "task",
-  //     progress: 0,
-  //   },
-  //   {
-  //     start: new Date(2020, 1, 5),
-  //     end: new Date(2020, 1, 6),
-  //     name: "Deply",
-  //     id: "Task 4",
-  //     type: "task",
-  //     progress: 0,
-  //   },
-  //   {
-  //     start: new Date(2020, 1, 6),
-  //     end: new Date(2020, 1, 7),
-  //     name: "Review",
-  //     id: "Task 5",
-  //     type: "task",
-  //     progress: 0,
-  //   },
-  //   {
-  //     start: new Date(2020, 1, 7),
-  //     end: new Date(2020, 1, 8),
-  //     name: "Launch",
-  //     id: "Task 6",
-  //     type: "task",
-  //     progress: 10,
-  //   },
-  // ];
-  const { pertData } = useProject();
-  const tasksWithStartAndEnd = pertData.tasks.filter(
+  const { theme } = useTheme();
+  const pertData = useProject.getState().pertData;
+  if (!pertData.tasks) {
+    return (
+      <div className="w-full h-full flex justify-center items-center">
+        No tasks
+      </div>
+    );
+  }
+  const tasksWithoutStartAndEnd = pertData.tasks.filter(
     (task) => task.taskName !== "END" && task.taskName !== "START"
   );
-  console.log(tasksWithStartAndEnd);
-  const tasks = refactorTasks(tasksWithStartAndEnd);
+
+  const tasks = refactorTasks(tasksWithoutStartAndEnd, theme);
   return (
-    <Gantt
-      tasks={tasks}
-      listCellWidth=""
-      barBackgroundSelectedColor="bb"
-      viewMode={ViewMode.Day}
-      ganttHeight={490}
-      barProgressColor="#00a2c7"
-      barBackgroundColor="#00a2c7"
-    />
+    pertData.tasks && (
+      <Gantt
+        tasks={tasks}
+        listCellWidth=""
+        viewMode={ViewMode.Day}
+        ganttHeight={490}
+      />
+    )
   );
 };
 

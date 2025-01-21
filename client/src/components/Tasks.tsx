@@ -18,38 +18,89 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "./ui/input";
-import MultiSelect from "./MultiSelect";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
+import { Badge } from "./ui/badge";
+import { useEffect, useState } from "react";
+import { Task } from "@/types/tasks";
+import { useParams } from "react-router-dom";
+import Notify from "@/lib/Notify";
+import useProject from "@/store/projectStore";
+import hasCycle from "@/utils/detectCycleAndSort";
+import Alert from "./Alert";
+// import detectCycleAndSort from "@/utils/detectCycleAndSort";
 function Tasks() {
-  // const [alphabet, setAlphabet] = useState<string[]>([
-  //   ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)),
-  // ]);
-  // const [currentAlphabet, setCurrentAlphabet] = useState<number>(0);
-  // const [tasks, setTasks] = useState<
-  //   { name: string; duration: number; dependencies: string[] }[]
-  // >([
-  //   {
-  //     name: "A",
-  //     duration: 1,
-  //     dependencies: [],
-  //   },
-  // ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const { projectId } = useParams();
 
-  // const createRow = () => {
-  //   setTasks((prev) => [
-  //     ...prev,
-  //     {
-  //       name: alphabet[currentAlphabet],
-  //       duration: 1,
-  //       dependencies: [],
-  //     },
-  //   ]);
-  //   setCurrentAlphabet((prev) => prev + 1);
-  //   tableBodyRef.current?.scrollTo({
-  //     top: tableBodyRef.current?.scrollHeight,
-  //     behavior: "smooth",
-  //   });
-  // };
+  const createTask = async () => {
+    // get the next alphanumric task name
+    const taskName = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const randomId = Math.floor((Math.random() * 99999) % 999999);
+    setTasks((prev) => [
+      ...prev,
+      {
+        id: randomId,
+        taskName: taskName,
+        duration: 1,
+        dependencies: [],
+      },
+    ]);
+  };
+
+  const handleSaveTasks = async () => {
+    try {
+      if (projectId) {
+        if (hasCycle(tasks)) return Notify("Cycle detected ", "error");
+        const res = await fetch(`/api/task`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ tasks, projectId }),
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+          Notify("Tasks saved successfully", "success");
+          useProject.getState().featchProjectDetails(parseInt(projectId));
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      Notify("Failed to save tasks", "error");
+    }
+  };
+  useEffect(() => {
+    if (projectId != undefined) {
+      const getTasks = async () => {
+        try {
+          const tasks = await fetch(`/api/project/${projectId}`, {
+            credentials: "include",
+          });
+          const data = await tasks.json();
+          if (data.status === "success") {
+            setTasks(data.data.tasks);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      getTasks();
+    }
+  }, [projectId]);
+  useEffect(() => {
+    if (tasks) {
+      console.log(tasks);
+    }
+  }, [tasks]);
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -57,7 +108,7 @@ function Tasks() {
           <Logs /> Tasks
         </Button>
       </SheetTrigger>
-      <SheetContent className="min-w-[450px]">
+      <SheetContent className="min-w-[500px]">
         <SheetHeader>
           <SheetTitle>Tasks List </SheetTitle>
           <SheetDescription></SheetDescription>
@@ -66,34 +117,29 @@ function Tasks() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className=" text-nowrap">Task Name</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead className="w-full text-nowrap">Task Name</TableHead>
                 <TableHead>Duration</TableHead>
-                <TableHead className="w-full text-center">Depends on</TableHead>
+                <TableHead className="w-[100px] text-center text-nowrap">
+                  Depends on
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <Task
-                defaultValue={{ name: "A", duration: 1, dependencies: [] }}
-              />
-              {/* {tasks?.map((task, index) => {
+              {tasks?.map((task, index) => {
                 return (
-                  <Task
+                  <CustTask
+                    handleSaveTasks={handleSaveTasks}
                     key={index}
-                    defaultValue={{
-                      name: task.name,
-                      duration: task.duration,
-                      dependencies: task.dependencies,
-                    }}
+                    task={task}
+                    tasks={tasks}
+                    setTasks={setTasks}
                   />
                 );
-              })} */}
+              })}
               <TableRow>
                 <TableCell className="font-medium text-center">
-                  <Button
-                  // onClick={createRow}
-                  >
-                    <Plus /> Add Task
-                  </Button>
+                  {/* btn  */}
                 </TableCell>
                 <TableCell className="text-center"></TableCell>
                 <TableCell className="flex items-center flex-wrap gap-1"></TableCell>
@@ -101,25 +147,127 @@ function Tasks() {
             </TableBody>
           </Table>
         </ScrollArea>
-        <Button className="w-full">
-          <Save /> Save
-        </Button>
+        <div className=" flex gap-2 items-center">
+          <Alert
+            title="Save Tasks"
+            description="Are you sure you want to save?"
+            action="Save"
+            cancel="Cancel"
+            trigger={
+              <Button className="w-full">
+                <Save /> Save
+              </Button>
+            }
+            func={handleSaveTasks}
+          />
+          <Button onClick={createTask} className="w-full">
+            <Plus /> Add Task
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );
 }
 
-const Task = ({
-  defaultValue = { name: "A", duration: 1, dependencies: [] },
+const CustTask = ({
+  task,
+  tasks,
+  setTasks,
 }: {
-  defaultValue?: { name: string; duration: number; dependencies: string[] };
+  task: Task;
+  tasks: Task[];
+  setTasks: (tasks: Task[]) => void;
+  handleSaveTasks: () => void;
 }) => {
+  const [dependencies, setDependencies] = useState<number[]>([]);
+
+  // const buildTaskMap = (tasks: Task[]) => {
+  //   const map = new Map<number, number[]>();
+  //   tasks.forEach((t) => {
+  //     map.set(t.id, t.dependencies || []);
+  //   });
+  //   return map;
+  // };
+
+  // const hasCycle = (
+  //   currentId: number,
+  //   depId: number,
+  //   taskMap: Map<number, number[]>,
+  //   visited = new Set<number>()
+  // ): boolean => {
+  //   if (visited.has(depId)) return true;
+  //   visited.add(depId);
+
+  //   const dep = taskMap.get(depId) || [];
+  //   for (const d of dep) {
+  //     if (d === currentId || hasCycle(currentId, d, taskMap, visited)) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // };
+
+  const [filteredDependencies, setFilteredDependencies] = useState<
+    { id: number; taskName: string }[]
+  >([]);
+
+  // useEffect(() => {
+  //   const taskMap = buildTaskMap(tasks);
+  //   const filtered = tasks
+  //     .filter(
+  //       (dep) =>
+  //         dep.id !== task.id &&
+  //         !hasCycle(task.id, dep.id, taskMap) &&
+  //         dep.id != -1
+  //     )
+  //     .map((dep) => ({
+  //       id: dep.id,
+  //       taskName: dep.taskName,
+  //     }));
+  //   setFilteredDependencies(filtered);
+  // }, [tasks, task]);
+
+  useEffect(() => {
+    setDependencies(task.dependencies || []);
+    setFilteredDependencies(
+      tasks.filter(
+        (item) => item.id != task.id && !item.dependencies?.includes(task.id)
+      )
+    );
+  }, [tasks]);
+
+  const handleDeleteTask = () => {
+    tasks.forEach(
+      (t) => (t.dependencies = t.dependencies?.filter((dep) => dep !== task.id))
+    );
+    setTasks(tasks.filter((t) => t.id !== task.id));
+  };
   return (
     <TableRow>
+      <TableCell className="w-min">
+        <Alert
+          title="Delete Task"
+          description="Are you sure you want to delete this task?"
+          action="Delete"
+          cancel="Cancel"
+          trigger={<Button variant="destructive">Delete Task</Button>}
+          func={handleDeleteTask}
+        />
+      </TableCell>
       <TableCell className="font-medium text-center">
         <Input
           type="text"
-          defaultValue={defaultValue.name}
+          defaultValue={task?.taskName}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === "") {
+              return Notify("Task name can't be empty", "error");
+            }
+            if (tasks.filter((t) => t.taskName === value).length > 1) {
+              return Notify("Task name must be unique", "error");
+            }
+            task.taskName = e.target.value;
+          }}
           className="text-center w-[70px]"
         />
       </TableCell>
@@ -129,11 +277,95 @@ const Task = ({
           placeholder="Duration"
           min={1}
           className="w-[60px]"
-          defaultValue={defaultValue.duration}
+          defaultValue={task?.duration}
+          onChange={(e) => {
+            task.duration = parseInt(e.target.value);
+          }}
         />
       </TableCell>
-      <TableCell className="flex items-center flex-wrap gap-1">
-        <MultiSelect />
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            asChild
+            className="w-full h-fit flex justify-start"
+          >
+            <Button variant="outline" className="w-full">
+              <span className="flex items-center gap-1 flex-wrap w-full">
+                {dependencies && dependencies.length > 0
+                  ? dependencies
+                      .filter((item) => item != -1)
+                      .map((taskDep, i) => {
+                        const dep = tasks.find((dep) => dep.id === taskDep);
+                        if (!dep) {
+                          return null;
+                        }
+                        return (
+                          <Badge key={i} className="bg-primary">
+                            {dep?.taskName}
+                          </Badge>
+                        );
+                      })
+                  : "No dependencies"}
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent className="w-56">
+            <DropdownMenuLabel>select dependencies</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {filteredDependencies.length === 0 ? (
+              <DropdownMenuItem disabled>
+                No dependencies available
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={() => {
+                  setDependencies([]);
+                  task.dependencies = [];
+                }}
+              >
+                <Button className="w-full">Clear all dependencies</Button>
+              </DropdownMenuItem>
+            )}
+            {filteredDependencies.map((ts, index) => (
+              <DropdownMenuCheckboxItem
+                key={index}
+                checked={dependencies.includes(ts.id)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    const updatedDeps = [...dependencies, ts.id];
+                    setDependencies(updatedDeps);
+                    setTasks(
+                      tasks.map((t) => {
+                        if (t.id === task.id) {
+                          t.dependencies = updatedDeps;
+                        }
+                        return t;
+                      })
+                    );
+                  } else {
+                    const updatedDeps = dependencies.filter(
+                      (dep) => dep !== ts.id
+                    );
+                    setDependencies(updatedDeps);
+                    setTasks(
+                      tasks.map((t) => {
+                        if (t.id === task.id) {
+                          t.dependencies = updatedDeps;
+                        }
+                        return t;
+                      })
+                    );
+                  }
+                }}
+              >
+                <span className="flex  w-full text-sm px-4 font-bold">
+                  {ts.taskName}
+                </span>
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </TableCell>
     </TableRow>
   );

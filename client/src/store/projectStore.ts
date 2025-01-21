@@ -1,6 +1,8 @@
 import Notify from "@/lib/Notify";
 import { PertData } from "@/types/Pert";
 import { project } from "@/types/project";
+import { Task } from "@/types/tasks";
+import calculatePert from "@/utils/PERT";
 import { create } from "zustand";
 export type ProjectState = {
   projects: project[];
@@ -10,13 +12,24 @@ export type ProjectState = {
   pertData: PertData;
   featchProjects: (email: string) => Promise<void>;
   featchProjectDetails: (projectId: number) => Promise<void>;
-  fetchDeletProject: (projectId: number) => Promise<void>;
+  fetchDeletProject: (
+    projectId: number,
+    navigate: (path: string) => void
+  ) => Promise<void>;
   fetchCreateProject: (projectData: {
     userId: string;
     projectName: string;
     projectDescription: string;
   }) => Promise<void>;
-  setPertData: (data: PertData) => void;
+  fetchUpdateProject: (
+    projectData: {
+      userId: string;
+      projectName: string;
+      projectDescription: string;
+    },
+    projectId: number
+  ) => Promise<void>;
+  setTasks: (tasks: Task[]) => void;
 };
 const useProject = create<ProjectState>((set) => ({
   projects: [],
@@ -53,9 +66,30 @@ const useProject = create<ProjectState>((set) => ({
       const res = await fetch(`/api/project/${projectId}`);
 
       const currentProjectData = await res.json();
-      if (currentProjectData?.status == "success") {
+      if (
+        currentProjectData?.status == "success" &&
+        currentProjectData.data.tasks.length > 0
+      ) {
         set({
           currentProject: currentProjectData.data,
+        });
+        const result = calculatePert(currentProjectData.data.tasks);
+        if (!result) return;
+        set({
+          pertData: result,
+        });
+      } else if (
+        currentProjectData?.status == "success" &&
+        currentProjectData.data?.tasks?.length == 0
+      ) {
+        set({
+          currentProject: currentProjectData.data,
+          pertData: {} as PertData,
+        });
+      } else {
+        set({
+          currentProject: {} as project,
+          pertData: {} as PertData,
         });
       }
     } catch (error) {
@@ -66,7 +100,7 @@ const useProject = create<ProjectState>((set) => ({
       });
     }
   },
-  fetchDeletProject: async (projectId) => {
+  fetchDeletProject: async (projectId, navigate) => {
     try {
       const res = await fetch(`/api/project/${projectId}`, {
         method: "delete",
@@ -80,10 +114,14 @@ const useProject = create<ProjectState>((set) => ({
             projects: prev.projects.filter((item) => item.id != projectId),
           };
         });
-        if (projectId == useProject.getState().currentProject.id) {
+        if (
+          projectId == useProject.getState().currentProject.id ||
+          useProject.getState().projects.length == 0
+        ) {
           set({
             currentProject: {} as project,
           });
+          navigate("/dashboard");
         }
       } else {
         Notify("project not deleted!", "error");
@@ -121,10 +159,52 @@ const useProject = create<ProjectState>((set) => ({
       console.log(error);
     }
   },
-  setPertData: (data) => {
-    set({
-      pertData: data,
-    });
+  fetchUpdateProject: async (projectData, projectId) => {
+    if (
+      !projectData.userId ||
+      !projectData.projectName ||
+      !projectData.projectDescription ||
+      !projectId
+    ) {
+      return Notify("all field is required", "error");
+    }
+    try {
+      const res = await fetch(`/api/project/${projectId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectName: projectData.projectName,
+          projectDescription: projectData.projectDescription,
+          userId: projectData.userId,
+        }),
+      });
+      const resData = await res.json();
+      if (resData.status == "success") {
+        Notify(resData.message, "success");
+        set((state) => ({
+          projects: state.projects.map((item) => {
+            if (item.id == projectId) {
+              return resData.data;
+            }
+            return item;
+          }),
+        }));
+      } else {
+        Notify(resData.message, "error");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  setTasks: (tasks) => {
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject,
+        tasks,
+      },
+    }));
   },
 }));
 

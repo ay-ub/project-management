@@ -1,10 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define("Task", {
-    taskName: {
-      type: DataTypes.STRING,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
       allowNull: false,
+      autoIncrement: false,
     },
-    description: {
+    taskName: {
       type: DataTypes.STRING,
       allowNull: false,
     },

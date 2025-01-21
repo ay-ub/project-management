@@ -9,11 +9,18 @@ import {
 } from "@/components/ui/sidebar";
 import { NavUser } from "./NavUser";
 import { Link } from "react-router-dom";
+import { FolderKanban } from "lucide-react";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="border-r-0" {...props}>
       <SidebarHeader>
-        <Link to="/dashboard">logo</Link>
+        <Link
+          to="/dashboard"
+          className="text-center  flex items-center justify-center gap-2"
+        >
+          <FolderKanban />
+          Project Management
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <NavProjects />

@@ -28,8 +28,8 @@ const depData = [
 
 const createDependency = async (req, res) => {
   try {
-    const { taskId, dep_taskId } = req.body;
-    if (!taskId || !dep_taskId) {
+    const { taskId, dependencies } = req.body;
+    if (!taskId || !dependencies) {
       return res.status(400).json({
         status: "fail",
         data: null,
@@ -37,7 +37,7 @@ const createDependency = async (req, res) => {
       });
     }
 
-    if (taskId == dep_taskId) {
+    if (dependencies.includes(taskId)) {
       return res.status(400).json({
         status: "fail",
         data: null,
@@ -45,11 +45,9 @@ const createDependency = async (req, res) => {
       });
     }
 
-    // const task = await Dependency.create({
-    //   taskId,
-    //   dep_taskId,
-    // });
-    const tasks = await Dependency.bulkCreate(depData);
+    const tasks = await Dependency.bulkCreate([
+      ...dependencies.map((dep_taskId) => ({ taskId, dep_taskId })),
+    ]);
 
     res.status(201).json({
       status: "success",

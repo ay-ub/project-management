@@ -1,0 +1,17 @@
+@startuml
+actor User as U
+participant "PERT Calculator" as PC
+participant "Levels Calculator" as LC
+participant "Start and End Calculator" as SEC
+participant "Slack and Critical Path Calculator" as SCPC
+participant "Links Generator" as LG
+participant "Coordinates Calculator" as CC
+
+U -> PC : Start calculatePert(tasks)
+PC -> LC : Calculate Levels
+LC --> PC : Return Levels
+PC -> SEC : Calculate Start and End
+SEC --> PC : Return Project Duration
+PC -> SCPC : Calculate Slack and Critical Path
+PC --> U : Return Full PERT Data
+@enduml

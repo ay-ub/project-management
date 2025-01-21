@@ -9,13 +9,17 @@ import Slack from "@/components/Slack";
 
 function Project() {
   const { projectId } = useParams();
-  const { currentProject, featchProjectDetails, loading } = useProject();
+  const featchProjectDetails = useProject(
+    (status) => status.featchProjectDetails
+  );
+  const currentTasks = useProject((state) => state.currentProject.tasks);
+  const loading = useProject((state) => state.loading);
   useEffect(() => {
     if (projectId) {
       featchProjectDetails(parseInt(projectId));
     }
   }, [projectId]);
-  return currentProject.projectName ? (
+  return currentTasks ? (
     <Tabs defaultValue="PERT" className="w-full relative">
       <TabsList className="w-full py-2">
         <TabsTrigger value="PERT" className="flex-1 ">
@@ -59,7 +63,10 @@ function Project() {
       {loading ? (
         <Loader className="animate-spin" />
       ) : (
-        <h1 className="text-2xl text-muted-foreground">No project found</h1>
+        <>
+          <h1 className="text-2xl text-muted-foreground">No tasks found</h1>
+          {/* <Tasks /> */}
+        </>
       )}
     </div>
   );

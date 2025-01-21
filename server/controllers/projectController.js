@@ -50,18 +50,18 @@ const createProject = async (req, res) => {
         .json({ status: "fail", data: null, message: "User not found" });
     }
 
-    // const newProject = await Project.create({
-    //   userId,
-    //   projectName,
-    //   projectDescription,
-    // });
+    const newProject = await Project.create({
+      userId,
+      projectName,
+      projectDescription,
+    });
 
-    const projects = await Project.bulkCreate(projectData);
+    // const projects = await Project.bulkCreate(projectData);
     res.status(201).json({
       status: "success",
       message: "Project created successfully",
-      // data: newProject,
-      data: projects,
+      data: newProject,
+      // data: projects,
     });
   } catch (error) {
     console.error("Error creating project:", error);
