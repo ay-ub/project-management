@@ -17,8 +17,8 @@ export default function Login() {
   const login = useUser((state) => state.login);
   const loading = useUser((state) => state.loading);
   const [userData, setUserData] = useState({
-    email: "johndoe@example.com",
-    password: "password123",
+    email: "",
+    password: "",
   });
   const [togglePassword, setTogglePassword] = useState(false);
   return (
@@ -65,6 +65,7 @@ export default function Login() {
                   });
                 }}
                 id="password"
+                placeholder="Password"
                 type={togglePassword ? "text" : "password"}
                 required
               />
