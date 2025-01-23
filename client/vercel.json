@@ -1,5 +1,5 @@
 {
-  "proxies": [
+  "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://project-management-1-f8ub.onrender.com/$1"
