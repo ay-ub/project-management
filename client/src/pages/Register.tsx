@@ -12,16 +12,34 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import useUser from "@/store/userStore";
 import { Eye, EyeClosed, Loader } from "lucide-react";
+import Notify from "@/lib/Notify";
 function Register() {
   const [userData, setUserData] = useState({
     name: "",
     familyName: "",
     email: "",
     password: "",
+    repeatPassword: "",
   });
 
   const { register, registerLoading } = useUser();
   const handleRegister = () => {
+    if (userData.name.length < 3) {
+      Notify("First name must be at least 3 characters", "error");
+      return;
+    } else if (userData.familyName.length < 3) {
+      Notify("Last name must be at least 3 characters", "error");
+      return;
+    } else if (userData.email.length < 3) {
+      Notify("Email must be at least 3 characters", "error");
+      return;
+    } else if (userData.password.length < 6) {
+      Notify("Password must be at least 6 characters", "error");
+      return;
+    } else if (userData.password !== userData.repeatPassword) {
+      Notify("Passwords do not match", "error");
+      return;
+    }
     register(userData);
   };
   const [togglePassword, setTogglePassword] = useState(false);
@@ -131,10 +149,10 @@ function Register() {
                 onChange={(e) => {
                   setUserData({
                     ...userData,
-                    password: e.target.value,
+                    repeatPassword: e.target.value,
                   });
                 }}
-                defaultValue={userData.password}
+                defaultValue={userData.repeatPassword}
                 required
                 placeholder="Re-enter password"
               />
